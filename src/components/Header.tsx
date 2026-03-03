@@ -1,18 +1,41 @@
-
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { Clock, RefreshCw, Zap, ShieldCheck } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Clock, RefreshCw, Zap, ShieldCheck, Volume2, VolumeX, Radio } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function Header() {
   const [time, setTime] = useState<Date | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<string>("REAL-TIME");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
+    
+    // Initialize Radio
+    audioRef.current = new Audio("https://listen.radioking.com/radio/701141/stream/766385");
+    audioRef.current.volume = 0.5;
+
+    return () => {
+      clearInterval(timer);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
   }, []);
+
+  const toggleRadio = () => {
+    if (!audioRef.current) return;
+    
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(err => console.warn("Autoplay blocked:", err));
+    }
+    setIsPlaying(!isPlaying);
+  };
 
   const bucharestTime = time ? new Intl.DateTimeFormat('ro-RO', {
     timeZone: 'Europe/Bucharest',
@@ -46,6 +69,20 @@ export function Header() {
 
       <div className="flex items-center gap-4 lg:gap-10">
         <div className="flex items-center gap-4 lg:gap-10">
+          {/* Radio Toggle */}
+          <button 
+            onClick={toggleRadio}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
+              isPlaying 
+                ? 'bg-primary/20 border-primary text-primary animate-pulse' 
+                : 'bg-white/5 border-white/10 text-white/40 hover:text-white'
+            }`}
+          >
+            <Radio className="w-3.5 h-3.5" />
+            <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline">Pescobar FM</span>
+            {isPlaying ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+          </button>
+
           <div className="hidden sm:flex flex-col items-end">
             <div className="flex items-center text-[8px] lg:text-[9px] font-black text-muted-foreground gap-1.5 tracking-widest">
               <RefreshCw className="w-2.5 h-2.5 text-primary animate-spin-slow" />
@@ -53,7 +90,7 @@ export function Header() {
             </div>
             <span className="text-[10px] lg:text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5">
               <span className="w-1 h-1 lg:w-1.5 lg:h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              {lastUpdate}
+              LIVE FEED
             </span>
           </div>
           

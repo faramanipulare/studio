@@ -1,4 +1,3 @@
-
 'use server';
 
 import { format, parseISO } from 'date-fns';
@@ -26,13 +25,15 @@ const BUCHAREST_TZ = 'Europe/Bucharest';
  */
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   try {
-    // We use a cache-busting timestamp to ensure fresh data from the institutional feed
+    // We use a cache-busting timestamp and 'no-store' to ensure 100% fresh data
     const ts = new Date().getTime();
     const response = await fetch(`https://nfs.faireconomy.media/ff_calendar_thisweek.json?v=${ts}`, {
-      next: { revalidate: 60 }, // Revalidate every minute for high accuracy
+      cache: 'no-store', // Disable caching for real-time accuracy
       headers: {
         'Accept': 'application/json',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
         'User-Agent': 'Mozilla/5.0 (Institutional Market Intelligence Agent)'
       }
     });

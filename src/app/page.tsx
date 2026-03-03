@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -35,6 +34,7 @@ export default function Home() {
   const loadData = async () => {
     setLoading(true);
     try {
+      // Force fetch fresh data bypassing browser cache
       const data = await fetchWeeklyEvents();
       setWeeklyData(data);
       setLastSync(format(new Date(), 'HH:mm:ss'));
@@ -135,9 +135,9 @@ export default function Home() {
                 OPEN ANALYSIS
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[90vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-[2.5rem] overflow-hidden">
-              <div className="h-full w-full overflow-y-auto pt-2">
-                <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto my-3" />
+            <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-[2rem] flex flex-col">
+              <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto my-4 shrink-0" />
+              <div className="flex-1 overflow-y-auto pb-10">
                 <AISidebar 
                   selectedDayEvents={selectedDayEvents} 
                   selectedDate={selectedDate} 
@@ -149,7 +149,7 @@ export default function Home() {
         </div>
 
         {/* Desktop Sidebar */}
-        <div className="hidden lg:block border-r border-white/5 shrink-0">
+        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full">
           <AISidebar 
             selectedDayEvents={selectedDayEvents} 
             selectedDate={selectedDate} 
@@ -257,7 +257,7 @@ export default function Home() {
 
           {/* Scrollable Events Container */}
           <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0">
-            <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl mb-20">
               {/* Desktop View */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left">
@@ -340,7 +340,6 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <div className="h-20 lg:h-0" /> {/* Spacer for mobile nav/ticker */}
           </div>
         </div>
       </main>
