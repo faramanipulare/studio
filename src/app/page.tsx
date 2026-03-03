@@ -1,22 +1,33 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { NewsTicker } from '@/components/NewsTicker';
 import { AISidebar } from '@/components/AISidebar';
 import { getWeeklyEvents, type EconomicEvent } from '@/app/lib/mock-data';
 import { format, parseISO } from 'date-fns';
-import { Calendar as CalendarIcon, ChevronRight, Activity, Zap, Layers } from 'lucide-react';
+import { Activity, ChevronRight, Layers, Zap, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 export default function Home() {
-  const weeklyData = useMemo(() => getWeeklyEvents(), []);
-  const [selectedDate, setSelectedDate] = useState<string | null>(Object.keys(weeklyData)[0] || null);
+  const [weeklyData, setWeeklyData] = useState<Record<string, EconomicEvent[]>>({});
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [impactFilter, setImpactFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All');
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    const data = getWeeklyEvents();
+    setWeeklyData(data);
+    const firstDate = Object.keys(data)[0];
+    if (firstDate) {
+      setSelectedDate(firstDate);
+    }
+    setIsMounted(true);
+  }, []);
 
   const selectedDayEvents = selectedDate ? weeklyData[selectedDate] : null;
-  const flatWeeklyEvents = Object.values(weeklyData).flat();
+  const flatWeeklyEvents = useMemo(() => Object.values(weeklyData).flat(), [weeklyData]);
 
   const filteredEvents = useMemo(() => {
     if (!selectedDayEvents) return [];
@@ -36,6 +47,18 @@ export default function Home() {
       </Badge>
     );
   };
+
+  // Prevent hydration mismatch by returning a loading state or consistent shell during SSR
+  if (!isMounted) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#050508] text-foreground font-body">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#050508] text-foreground font-body">
@@ -94,7 +117,6 @@ export default function Home() {
             {Object.keys(weeklyData).map((dateStr) => {
               const date = parseISO(dateStr);
               const isSelected = selectedDate === dateStr;
-              const highImpactCount = weeklyData[dateStr].filter(e => e.impact === 'High').length;
               
               return (
                 <button
