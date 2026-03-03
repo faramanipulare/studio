@@ -30,12 +30,27 @@ export type WeeklyMarketOverviewInput = z.infer<typeof WeeklyMarketOverviewInput
 const WeeklyMarketOverviewOutputSchema = z.object({
   weeklyOutlook: z.string().describe('A high-level market outlook for the upcoming week, summarizing key themes and potential volatility.'),
   successProbability: z.number().min(0).max(100).describe('A percentage (0-100) indicating the likelihood of a generally positive or favorable market outcome for the week.'),
+  eventsDetail: z.array(z.object({
+    id: z.string(),
+    sentiment: z.enum(['Bullish', 'Bearish', 'Neutral']),
+    impact_percentage: z.number(),
+  })).optional().describe('Sentiment and impact analysis for individual events.'),
 });
 
 export type WeeklyMarketOverviewOutput = z.infer<typeof WeeklyMarketOverviewOutputSchema>;
 
 export async function getWeeklyMarketOverview(input: WeeklyMarketOverviewInput): Promise<WeeklyMarketOverviewOutput> {
-  return weeklyMarketOverviewFlow(input);
+  try {
+    return await weeklyMarketOverviewFlow(input);
+  } catch (error) {
+    console.error("Error in getWeeklyMarketOverview:", error);
+    // Return a fallback response in case of quota issues or other AI errors
+    return {
+      weeklyOutlook: "Market overview is currently unavailable due to high demand. Please check again later.",
+      successProbability: 50,
+      eventsDetail: []
+    };
+  }
 }
 
 const weeklyMarketOverviewPrompt = ai.definePrompt({
@@ -46,6 +61,8 @@ const weeklyMarketOverviewPrompt = ai.definePrompt({
 
 The overview should include a high-level market outlook and an associated "success probability" percentage, which represents your confidence in the market having a generally positive or favorable outcome given the events.
 
+Additionally, for each event provided, estimate the "sentiment" (Bullish, Bearish, or Neutral) and an "impact_percentage" (0-100) representing how much this event might influence market volatility.
+
 Here is the list of economic calendar events for the upcoming week, presented as a JSON array:
 
 {{{json economicEvents}}}
@@ -53,6 +70,7 @@ Here is the list of economic calendar events for the upcoming week, presented as
 Based on this data, provide:
 1.  A "weeklyOutlook" describing the key themes, potential volatility, and general sentiment for the week.
 2.  A "successProbability" as a number between 0 and 100, indicating the likelihood of a generally positive market outcome.
+3.  An array "eventsDetail" with sentiment and impact_percentage for each event.
 
 Ensure your output strictly adheres to the following JSON schema:`,
 });

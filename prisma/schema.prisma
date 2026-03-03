@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  trades    Trade[]
+}
+
+model Trade {
+  id                Int      @id @default(autoincrement())
+  date              String
+  asset             String
+  type              String
+  entry_price       Float
+  exit_price        Float?
+  status            String   @default("Open")
+  pnl               Float    @default(0.0)
+  impact_percentage Float?   @default(0.0)
+  sentiment         String?  @default("Neutral")
+  user_id           Int
+  user              User     @relation(fields: [user_id], references: [id])
+}
