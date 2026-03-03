@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -42,7 +43,7 @@ export default function Home() {
       setLastSync(format(new Date(), 'HH:mm:ss'));
       
       const dates = Object.keys(data).sort();
-      // Targeted simulation session for the user's specific request date
+      // Specifically target Mar 3, 2026 as per user request
       const targetSession = '2026-03-03';
       
       if (!selectedDate) {
@@ -54,7 +55,7 @@ export default function Home() {
       }
     } catch (err: any) {
       console.error("Live Feed Sync Error:", err);
-      setError("Market feed unreachable (429/Timeout). Please retry live sync.");
+      setError(err.message || "Market feed unreachable. Please retry live sync.");
     } finally {
       setLoading(false);
     }
@@ -62,8 +63,8 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    // Refresh every 5 minutes
-    const interval = setInterval(loadData, 300000);
+    // Auto-refresh every 2 minutes
+    const interval = setInterval(loadData, 120000);
     return () => clearInterval(interval);
   }, []);
 
@@ -123,8 +124,8 @@ export default function Home() {
       <Header />
       
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* Mobile Analysis Header Button */}
-        <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 sticky top-0 z-30 backdrop-blur-md flex items-center justify-between shrink-0">
+        {/* Mobile View Toggle */}
+        <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 flex items-center justify-between shrink-0">
            <div className="flex items-center gap-2">
             <BrainCircuit className="w-5 h-5 text-primary" />
             <span className="text-[11px] font-black uppercase text-white tracking-widest">Market Analysis</span>
@@ -136,10 +137,9 @@ export default function Home() {
                 OPEN ANALYSIS
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[90vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-[2.5rem] overflow-hidden flex flex-col">
+            <SheetContent side="bottom" className="h-[92vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-[2.5rem] overflow-hidden">
               <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto my-4 shrink-0" />
-              {/* Dedicated Scrollable Container for Mobile Analysis */}
-              <div className="flex-1 overflow-y-auto px-4 pb-24">
+              <div className="h-full overflow-y-auto px-4 pb-24 scroll-smooth">
                 <AISidebar 
                   selectedDayEvents={selectedDayEvents} 
                   selectedDate={selectedDate} 
@@ -150,16 +150,18 @@ export default function Home() {
           </Sheet>
         </div>
 
-        {/* Desktop AISidebar Container */}
+        {/* Desktop Sidebar */}
         <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[420px] overflow-hidden">
-          <AISidebar 
-            selectedDayEvents={selectedDayEvents} 
-            selectedDate={selectedDate} 
-            weeklyEvents={flatWeeklyEvents}
-          />
+          <div className="h-full overflow-y-auto px-6">
+            <AISidebar 
+              selectedDayEvents={selectedDayEvents} 
+              selectedDate={selectedDate} 
+              weeklyEvents={flatWeeklyEvents}
+            />
+          </div>
         </div>
 
-        {/* Main Content Area */}
+        {/* Main Feed Area */}
         <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden">
           <div className="p-4 lg:p-6 pb-2 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
@@ -212,7 +214,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Date Selection Grid */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
               {Object.keys(weeklyData).sort().map((dateStr) => {
                 const date = parseISO(dateStr);
@@ -257,12 +258,12 @@ export default function Home() {
             {error ? (
               <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-8 text-center space-y-4">
                 <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
-                <h3 className="text-sm font-black text-rose-500 uppercase tracking-widest">{error}</h3>
-                <Button onClick={loadData} className="bg-rose-500 hover:bg-rose-600">RETRY LIVE SYNC</Button>
+                <h3 className="text-sm font-black text-rose-500 uppercase tracking-widest">Feed Error</h3>
+                <p className="text-[10px] text-rose-400 font-bold uppercase">{error}</p>
+                <Button onClick={loadData} className="bg-rose-500 hover:bg-rose-600 h-9 rounded-full px-6 text-[10px] font-black tracking-widest">RETRY LIVE SYNC</Button>
               </div>
             ) : (
               <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
-                {/* Desktop View Table */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
@@ -300,7 +301,6 @@ export default function Home() {
                   </table>
                 </div>
 
-                {/* Mobile Card View */}
                 <div className="md:hidden divide-y divide-white/5">
                   {filteredEvents.map((event) => (
                     <div key={event.id} className="p-4 space-y-3">
@@ -340,7 +340,7 @@ export default function Home() {
                 {filteredEvents.length === 0 && !loading && (
                   <div className="py-20 text-center text-white/20 flex flex-col items-center gap-2">
                     <CalendarDays className="w-10 h-10 opacity-20" />
-                    <p className="text-[10px] font-black uppercase tracking-widest">No live volatility events synced</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest">No volatility events synced for this session.</p>
                   </div>
                 )}
               </div>

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { format, parseISO } from 'date-fns';
@@ -21,26 +22,30 @@ const BUCHAREST_TZ = 'Europe/Bucharest';
 
 /**
  * Fetches institutional economic calendar data live from the primary source.
- * NO FALLBACK DATA ALLOWED. Direct live connection with aggressive cache-busting.
+ * FORCED LIVE CONNECTION WITH STRICT CACHE BUSTING.
  */
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
-  // Use a cache-busting timestamp to bypass all proxy/CDN caches
-  const cacheBuster = Date.now();
-  const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?t=${cacheBuster}`;
+  // Use a precise timestamp to force the institutional server to bypass its own internal CDN caches.
+  const t = new Date().getTime();
+  const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?timestamp=${t}`;
 
   try {
     const response = await fetch(url, {
       cache: 'no-store',
       headers: {
         'Accept': 'application/json',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Institutional-Market-Intelligence/1.0'
+        'Expires': '0',
+        'User-Agent': 'Mozilla/5.0 (Trading-Institutional-Intelligence/1.0)'
       }
     });
 
     if (!response.ok) {
-      throw new Error(`CRITICAL: Live data feed unreachable. Status: ${response.status}`);
+      if (response.status === 429) {
+        throw new Error("429: Rate limited by institutional feed. Please wait 1-2 minutes before refreshing.");
+      }
+      throw new Error(`Feed connection failed: ${response.status}`);
     }
 
     const rawData = await response.json();
@@ -52,7 +57,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     const weekly: Record<string, EconomicEvent[]> = {};
 
     rawData.forEach((item: any) => {
-      // Handle UTC to Bucharest conversion
+      // Data from FairEconomy is usually in UTC format. Convert to Bucharest time.
       const dateUtc = parseISO(item.date);
       const zonedDate = toZonedTime(dateUtc, BUCHAREST_TZ);
       
@@ -61,7 +66,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
 
       if (!weekly[dayKey]) weekly[dayKey] = [];
 
-      // Institutional sentiment algorithm based on impact type
+      // Determine sentiment based on institutional impact
       let sentiment: 'Bullish' | 'Bearish' | 'Neutral' | 'Mixed' = 'Neutral';
       let impact_percentage = 0;
 
@@ -92,15 +97,14 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       });
     });
 
-    // Sort events by time for each day
+    // Sort events by time
     Object.keys(weekly).forEach(day => {
       weekly[day].sort((a, b) => a.time.localeCompare(b.time));
     });
 
     return weekly;
   } catch (error: any) {
-    console.error("INSTITUTIONAL FEED SYNC FAILURE:", error.message);
-    // Throwing error to ensure UI handles the lack of live data appropriately
+    console.error("CRITICAL LIVE SYNC ERROR:", error.message);
     throw error;
   }
 }

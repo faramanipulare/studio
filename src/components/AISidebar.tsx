@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -78,7 +79,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-6 py-4 h-full bg-[#1F1C21]">
+    <div className="flex flex-col gap-6 py-6 min-h-full">
       <div className="flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
@@ -202,6 +203,9 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           )}
         </CardContent>
       </Card>
+      
+      {/* Bottom Spacer for Mobile Scroll */}
+      <div className="h-24 lg:hidden" />
     </div>
   );
 };

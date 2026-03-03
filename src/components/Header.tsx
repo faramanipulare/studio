@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -63,14 +64,17 @@ export function Header() {
       combo.value = langCode;
       combo.dispatchEvent(new Event('change'));
     } else {
-      // If the combo is not found, it might be because the widget is still loading
-      // or hidden in a different shadow DOM structure by Google.
-      // We attempt a fallback by clicking the simple layout elements if they exist.
-      const googleFrame = document.querySelector('.goog-te-menu-frame') as HTMLIFrameElement;
-      if (googleFrame) {
-        // Advanced fallback logic for iframe-based translation if needed
-      }
-      console.warn("Google Translate widget initializing or not found. Please wait.");
+      // Fallback if the widget is slow to load
+      const checkInterval = setInterval(() => {
+        const retryCombo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+        if (retryCombo) {
+          retryCombo.value = langCode;
+          retryCombo.dispatchEvent(new Event('change'));
+          clearInterval(checkInterval);
+        }
+      }, 500);
+      setTimeout(() => clearInterval(checkInterval), 5000);
+      console.warn("Google Translate widget initializing... retrying.");
     }
   };
 
@@ -94,7 +98,6 @@ export function Header() {
 
   return (
     <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/80 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
-      {/* Hidden container for the Google Translate Widget */}
       <div id="google_translate_element" className="hidden opacity-0 pointer-events-none absolute"></div>
 
       <div className="flex items-center gap-3 lg:gap-5">
