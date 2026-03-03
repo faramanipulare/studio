@@ -15,9 +15,9 @@ const DailyAnalysisEventSchema = z.object({
   currency: z.string().describe('The currency affected by the event (e.g., USD, EUR).'),
   event: z.string().describe('The name of the economic event.'),
   impact: z.enum(['Low', 'Medium', 'High']).describe('The expected impact level of the event.'),
-  actual: z.string().optional().describe('The actual value of the economic indicator.'),
-  forecast: z.string().optional().describe('The forecasted value of the economic indicator.'),
-  previous: z.string().optional().describe('The previous value of the economic indicator.'),
+  actual: z.string().optional().nullable().describe('The actual value of the economic indicator.'),
+  forecast: z.string().optional().nullable().describe('The forecasted value of the economic indicator.'),
+  previous: z.string().optional().nullable().describe('The previous value of the economic indicator.'),
 });
 
 const DailyAnalysisInputSchema = z.object({

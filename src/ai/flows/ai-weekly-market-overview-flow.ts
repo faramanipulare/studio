@@ -16,9 +16,9 @@ const EconomicCalendarEventSchema = z.object({
   time: z.string().describe('Time of the event in HH:MM (Bucharest time).'),
   currency: z.string().describe('The currency primarily affected by the event (e.g., USD, EUR).'),
   impact: z.enum(['High', 'Medium', 'Low', 'Holiday']).describe('The anticipated impact level of the event.'),
-  actual: z.string().nullable().describe('The actual reported value for the event, if available.'),
-  forecast: z.string().nullable().describe('The forecasted value for the event.'),
-  previous: z.string().nullable().describe('The previous reported value for the event.'),
+  actual: z.string().optional().nullable().describe('The actual reported value for the event, if available.'),
+  forecast: z.string().optional().nullable().describe('The forecasted value for the event.'),
+  previous: z.string().optional().nullable().describe('The previous reported value for the event.'),
 });
 
 const WeeklyMarketOverviewInputSchema = z.object({
