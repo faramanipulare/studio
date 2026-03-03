@@ -37,33 +37,22 @@ Provide:
 });
 
 export async function getWeeklyMarketOverview(input: WeeklyOverviewInput): Promise<WeeklyOverviewOutput> {
-  return weeklyMarketOverviewFlow(input);
-}
-
-const weeklyMarketOverviewFlow = ai.defineFlow(
-  {
-    name: 'weeklyMarketOverviewFlow',
-    inputSchema: WeeklyOverviewInputSchema,
-    outputSchema: WeeklyOverviewOutputSchema,
-  },
-  async (input) => {
-    try {
-      const { output } = await weeklyPrompt(input);
-      if (!output) {
-        throw new Error('Failed to generate weekly market overview.');
-      }
-      return output;
-    } catch (error: any) {
-      // Graceful fallback for quota limits or other errors
-      return {
-        overview: "Weekly institutional sentiment is currently stable. High-impact news releases remain the primary drivers for price action.",
-        keyEvents: [
-          "Central Bank interest rate decisions",
-          "Employment data releases (NFP)",
-          "Inflation metrics (CPI/PPI)"
-        ],
-        sentiment: "Neutral"
-      };
+  try {
+    const { output } = await weeklyPrompt(input);
+    if (!output) {
+      throw new Error('Failed to generate weekly market overview.');
     }
+    return output;
+  } catch (error: any) {
+    console.error('Weekly overview flow failed:', error);
+    return {
+      overview: "Weekly institutional sentiment is currently stable. High-impact news releases remain the primary drivers for price action.",
+      keyEvents: [
+        "Central Bank interest rate decisions",
+        "Employment data releases (NFP)",
+        "Inflation metrics (CPI/PPI)"
+      ],
+      sentiment: "Neutral"
+    };
   }
-);
+}

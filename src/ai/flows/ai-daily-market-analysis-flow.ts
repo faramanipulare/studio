@@ -50,33 +50,22 @@ Based on these events, provide a concise analysis, key factors, and market bias.
 });
 
 export async function getDailyMarketAnalysis(input: DailyAnalysisInput): Promise<DailyAnalysisOutput> {
-  return dailyMarketAnalysisFlow(input);
-}
-
-const dailyMarketAnalysisFlow = ai.defineFlow(
-  {
-    name: 'dailyMarketAnalysisFlow',
-    inputSchema: DailyAnalysisInputSchema,
-    outputSchema: DailyAnalysisOutputSchema,
-  },
-  async (input) => {
-    try {
-      const { output } = await dailyPrompt(input);
-      if (!output) {
-        throw new Error('Failed to generate daily market analysis.');
-      }
-      return output;
-    } catch (error: any) {
-      // Graceful fallback for quota limits or other errors
-      return {
-        analysis: "Daily session analysis is currently limited due to institutional data provider constraints. Monitor high-volatility news events manually.",
-        keyFactors: [
-          "Focus on G7 high-impact news releases",
-          "Watch for price deviations from technical levels during NY session",
-          "Monitor institutional flow around daily opens"
-        ],
-        marketBias: "Neutral"
-      };
+  try {
+    const { output } = await dailyPrompt(input);
+    if (!output) {
+      throw new Error('Failed to generate daily market analysis.');
     }
+    return output;
+  } catch (error: any) {
+    console.error('Daily analysis flow failed:', error);
+    return {
+      analysis: "Daily session analysis is currently limited due to institutional data provider constraints. Monitor high-volatility news events manually.",
+      keyFactors: [
+        "Focus on G7 high-impact news releases",
+        "Watch for price deviations from technical levels during NY session",
+        "Monitor institutional flow around daily opens"
+      ],
+      marketBias: "Neutral"
+    };
   }
-);
+}

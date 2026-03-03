@@ -14,18 +14,15 @@ import {
   TrendingUp, 
   TrendingDown, 
   Minus, 
-  Info,
-  ChevronRight,
-  ChevronDown
+  BrainCircuit,
+  CalendarDays
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export default function Home() {
   const [weeklyData, setWeeklyData] = useState<Record<string, EconomicEvent[]>>({});
@@ -82,7 +79,9 @@ export default function Home() {
       acc[curr] = (acc[curr] || 0) + 1;
       return acc;
     }, {});
-    const mainSentiment = Object.keys(counts).reduce((a, b) => (counts[a] || 0) > (counts[b] || 0) ? a : b, 'Neutral');
+    const mainSentiment = Object.keys(counts).length > 0 
+      ? Object.keys(counts).reduce((a, b) => (counts[a] || 0) > (counts[b] || 0) ? a : b)
+      : 'Neutral';
     return { avgImpact, mainSentiment };
   };
 
@@ -102,8 +101,8 @@ export default function Home() {
             <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse" />
             <Loader2 className="w-12 h-12 text-primary animate-spin relative z-10" />
           </div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary animate-pulse">
-            Establishing Server Bridge to Market Feeds...
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary animate-pulse px-4 text-center">
+            Synchronizing Global Session Feeds...
           </p>
         </main>
       </div>
@@ -111,54 +110,80 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#1F1C21] text-foreground font-body overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-[#1F1C21] text-foreground font-body overflow-x-hidden">
       <Header />
       
-      <main className="flex-1 flex overflow-hidden">
-        <AISidebar 
-          selectedDayEvents={selectedDayEvents} 
-          selectedDate={selectedDate} 
-          weeklyEvents={flatWeeklyEvents}
-        />
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden pb-12 lg:pb-0">
+        {/* Mobile AI Analysis Trigger */}
+        <div className="lg:hidden flex justify-between items-center p-3 bg-[#161419] border-b border-white/5 sticky top-16 z-30 backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            <BrainCircuit className="w-4 h-4 text-primary" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-white">Market Intelligence</span>
+          </div>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="h-7 text-[9px] font-black uppercase bg-primary/10 border-primary/20 text-primary px-3">
+                Review Bias
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[85vh] bg-[#0a0c12] border-white/5 p-0 overflow-y-auto rounded-t-3xl">
+              <AISidebar 
+                selectedDayEvents={selectedDayEvents} 
+                selectedDate={selectedDate} 
+                weeklyEvents={flatWeeklyEvents}
+              />
+            </SheetContent>
+          </Sheet>
+        </div>
 
-        <div className="flex-1 flex flex-col p-6 gap-6 bg-[#161419] overflow-y-auto pb-24">
-          <div className="flex items-end justify-between border-b border-white/5 pb-4">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block border-r border-white/5 shrink-0">
+          <AISidebar 
+            selectedDayEvents={selectedDayEvents} 
+            selectedDate={selectedDate} 
+            weeklyEvents={flatWeeklyEvents}
+          />
+        </div>
+
+        {/* Main Feed Content */}
+        <div className="flex-1 flex flex-col p-3 lg:p-6 gap-4 lg:gap-6 bg-[#161419] overflow-y-auto scrollbar-hide">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-3 lg:pb-4 gap-3">
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.2em]">
+              <div className="flex items-center gap-2 text-primary font-bold text-[9px] lg:text-[10px] uppercase tracking-[0.2em]">
                 <Activity className="w-3 h-3 animate-pulse" />
-                Institutional Data Feed
+                Live Institutional Feed
               </div>
-              <h2 className="text-2xl font-black tracking-tight flex items-center gap-3 text-white">
-                Global Economic Calendar
-                <span className="text-white/20 font-light text-xl">/</span>
-                <span className="text-white/60 text-sm font-medium tracking-normal">
-                  {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMMM d') : 'Selecting Session...'}
+              <h2 className="text-lg lg:text-2xl font-black tracking-tight text-white flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                Economic Calendar
+                <span className="hidden sm:inline text-white/20">/</span>
+                <span className="text-white/60 text-xs lg:text-sm font-medium tracking-normal">
+                  {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMMM d') : 'Selection required...'}
                 </span>
               </h2>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={loadData}
                 disabled={loading}
-                className="h-8 px-4 border-white/10 hover:bg-white/5 bg-transparent text-white"
+                className="h-7 lg:h-8 px-2.5 lg:px-3 border-white/10 hover:bg-white/5 bg-[#0c0e14] text-white shrink-0"
               >
-                <RefreshCcw className={`w-3.5 h-3.5 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                <span className="text-[10px] font-black uppercase">Sync Live Data</span>
+                <RefreshCcw className={`w-3 h-3 mr-1.5 lg:mr-2 ${loading ? 'animate-spin' : ''}`} />
+                <span className="text-[8px] lg:text-[9px] font-black uppercase">Refresh</span>
               </Button>
-              <div className="flex bg-[#0c0e14] rounded-lg p-0.5 border border-white/5">
-                {['All', 'High', 'Medium', 'Low'].map((impact) => (
+              <div className="flex bg-[#0c0e14] rounded-lg p-0.5 border border-white/5 shrink-0">
+                {(['All', 'High'] as const).map((impact) => (
                   <Button
                     key={impact}
                     variant="ghost"
                     size="sm"
-                    onClick={() => setImpactFilter(impact as any)}
-                    className={`h-7 px-3 text-[9px] font-black uppercase rounded-md transition-all ${
+                    onClick={() => setImpactFilter(impact)}
+                    className={`h-6 lg:h-7 px-2.5 lg:px-3 text-[8px] lg:text-[9px] font-black uppercase rounded-md transition-all ${
                       impactFilter === impact 
-                        ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-                        : 'text-white/40 hover:text-white hover:bg-white/5'
+                        ? 'bg-primary text-white' 
+                        : 'text-white/40 hover:text-white'
                     }`}
                   >
                     {impact}
@@ -168,7 +193,8 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {/* Daily Selector Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 lg:gap-3">
             {Object.keys(weeklyData).sort().map((dateStr) => {
               const date = parseISO(dateStr);
               const isSelected = selectedDate === dateStr;
@@ -179,103 +205,120 @@ export default function Home() {
                 <button
                   key={dateStr}
                   onClick={() => setSelectedDate(dateStr)}
-                  className={`group p-4 rounded-xl border transition-all text-left relative overflow-hidden ${
+                  className={`group p-2.5 lg:p-3 rounded-xl border transition-all text-left relative overflow-hidden ${
                     isSelected 
-                      ? 'bg-primary/5 border-primary/50 ring-1 ring-primary/20' 
-                      : 'bg-[#0c0e14] border-white/5 hover:bg-white/5 hover:border-white/20'
+                      ? 'bg-primary/10 border-primary/50 ring-1 ring-primary/20' 
+                      : 'bg-[#0c0e14] border-white/5 hover:border-white/20'
                   }`}
                 >
                   <div className="flex flex-col relative z-10">
-                    <span className={`text-[10px] font-black uppercase tracking-widest mb-1 transition-colors ${
+                    <span className={`text-[8px] lg:text-[9px] font-black uppercase tracking-widest mb-0.5 lg:mb-1 ${
                       isSelected ? 'text-primary' : 'text-white/40'
                     }`}>
                       {format(date, 'EEEE')}
                     </span>
-                    <span className="text-xl font-black tracking-tighter text-white">
+                    <span className="text-sm lg:text-base font-black tracking-tight text-white">
                       {format(date, 'MMM dd')}
                     </span>
                     
-                    <div className="mt-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex -space-x-1">
-                          {dayEvents.slice(0, 3).map((e, idx) => (
-                            <div 
-                              key={idx} 
-                              className={`w-2 h-2 rounded-full border border-[#050508] ${
-                                e.impact === 'High' ? 'bg-red-500' : e.impact === 'Medium' ? 'bg-orange-500' : 'bg-blue-500'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-[9px] font-black text-white/40 uppercase">
-                          {dayEvents.length} Events
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 bg-black/30 px-2 py-1 rounded-md">
-                        <span className="text-[10px] font-bold text-primary">{avgImpact}%</span>
+                    <div className="mt-1.5 lg:mt-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-md border border-white/5">
+                        <span className="text-[9px] lg:text-[10px] font-bold text-primary">{avgImpact}%</span>
                         <SentimentIndicator sentiment={mainSentiment} />
                       </div>
+                      <span className="text-[8px] lg:text-[9px] font-black text-white/20 uppercase">
+                        {dayEvents.length} E
+                      </span>
                     </div>
                   </div>
-                  {isSelected && (
-                    <div className="absolute top-0 right-0 p-2 opacity-10">
-                      <div className="w-12 h-12 text-primary" />
-                    </div>
-                  )}
                 </button>
               );
             })}
           </div>
 
-          <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-white/5 bg-white/[0.02]">
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Time</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Currency</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Event</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Impact %</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Sentiment</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Actual</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Forecast</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Previous</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/[0.03]">
-                {filteredEvents.map((event) => (
-                  <tr key={event.id} className="hover:bg-white/5 transition-colors group">
-                    <td className="px-6 py-4 font-mono text-xs text-white/80">{event.time}</td>
-                    <td className="px-6 py-4">
+          {/* Data Display */}
+          <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl flex-1">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto h-full">
+              <table className="w-full text-left border-collapse">
+                <thead className="sticky top-0 bg-[#0c0e14] z-10">
+                  <tr className="border-b border-white/5 bg-white/[0.02]">
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">GMT+2</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Pair</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Event</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Impact</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Bias</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Actual</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Forecast</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.03]">
+                  {filteredEvents.map((event) => (
+                    <tr key={event.id} className="hover:bg-white/5 transition-colors group">
+                      <td className="px-6 py-4 font-mono text-xs text-white/80">{event.time}</td>
+                      <td className="px-6 py-4 font-bold text-xs text-white">{event.currency}</td>
+                      <td className="px-6 py-4 font-bold text-xs text-white truncate max-w-[220px]">{event.event}</td>
+                      <td className="px-6 py-4 text-center">
+                         <span className={`text-[10px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/60'}`}>
+                           {event.impact_percentage}%
+                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-center">
+                          <SentimentIndicator sentiment={event.sentiment} />
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right font-mono text-xs text-emerald-400 font-bold">{event.actual || '--'}</td>
+                      <td className="px-6 py-4 text-right font-mono text-xs text-white/30">{event.forecast || '--'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile List View */}
+            <div className="md:hidden divide-y divide-white/5">
+              {filteredEvents.map((event) => (
+                <div key={event.id} className="p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="w-6 h-4 bg-white/5 rounded-sm flex items-center justify-center text-[10px] font-bold text-white/60">
-                          {event.currency.substring(0, 2)}
-                        </span>
-                        <span className="font-bold text-xs text-white">{event.currency}</span>
+                        <span className="font-mono text-[10px] text-primary">{event.time}</span>
+                        <span className="text-[10px] font-black text-white">{event.currency}</span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 font-bold text-xs text-white">{event.event}</td>
-                    <td className="px-6 py-4 text-center">
-                       <span className="text-xs font-mono text-white/60">{event.impact_percentage}%</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex justify-center">
-                        <SentimentIndicator sentiment={event.sentiment} />
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right font-mono text-xs text-emerald-400 font-bold">{event.actual || '-'}</td>
-                    <td className="px-6 py-4 text-right font-mono text-xs text-white/40">{event.forecast || '-'}</td>
-                    <td className="px-6 py-4 text-right font-mono text-xs text-white/20">{event.previous || '-'}</td>
-                  </tr>
-                ))}
-                {filteredEvents.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-white/40 text-xs italic font-medium">
-                      NO HIGH IMPACT DATA DETECTED FOR THIS SESSION
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                      <p className="text-xs font-bold text-white leading-tight">{event.event}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <SentimentIndicator sentiment={event.sentiment} />
+                      <span className={`text-[9px] font-black ${event.impact === 'High' ? 'text-rose-400' : 'text-white/30'}`}>
+                        {event.impact_percentage}% IMP
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 bg-black/20 p-2 rounded-lg border border-white/5">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-white/20 uppercase">Act</span>
+                      <span className="text-[10px] font-mono font-bold text-emerald-400">{event.actual || '--'}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-white/20 uppercase">Est</span>
+                      <span className="text-[10px] font-mono text-white/40">{event.forecast || '--'}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-white/20 uppercase">Prev</span>
+                      <span className="text-[10px] font-mono text-white/20">{event.previous || '--'}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {filteredEvents.length === 0 && (
+              <div className="py-20 text-center text-white/20 flex flex-col items-center gap-2">
+                <CalendarDays className="w-8 h-8 opacity-20" />
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] italic">No Volatility Expected</p>
+              </div>
+            )}
           </div>
         </div>
       </main>
