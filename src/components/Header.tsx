@@ -42,7 +42,7 @@ export function Header() {
       if (document.getElementById('google-translate-script')) return;
       const script = document.createElement('script');
       script.id = 'google-translate-script';
-      script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
       script.async = true;
       document.body.appendChild(script);
     };
@@ -64,7 +64,9 @@ export function Header() {
       combo.value = langCode;
       combo.dispatchEvent(new Event('change'));
     } else {
-      // Fallback if the widget is slow to load
+      // Robust retry logic for VPS latency
+      let attempts = 0;
+      const maxAttempts = 10;
       const checkInterval = setInterval(() => {
         const retryCombo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
         if (retryCombo) {
@@ -72,9 +74,12 @@ export function Header() {
           retryCombo.dispatchEvent(new Event('change'));
           clearInterval(checkInterval);
         }
+        attempts++;
+        if (attempts >= maxAttempts) {
+          clearInterval(checkInterval);
+          console.warn("Translation widget timed out.");
+        }
       }, 500);
-      setTimeout(() => clearInterval(checkInterval), 5000);
-      console.warn("Google Translate widget initializing... retrying.");
     }
   };
 
@@ -98,7 +103,7 @@ export function Header() {
 
   return (
     <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/80 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
-      <div id="google_translate_element" className="hidden opacity-0 pointer-events-none absolute"></div>
+      <div id="google_translate_element" className="hidden absolute opacity-0"></div>
 
       <div className="flex items-center gap-3 lg:gap-5">
         <div className="relative group shrink-0">

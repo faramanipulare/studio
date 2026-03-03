@@ -39,11 +39,15 @@ export default function Home() {
     setError(null);
     try {
       const data = await fetchWeeklyEvents();
+      
+      if (!data || Object.keys(data).length === 0) {
+        throw new Error("No events returned from the institutional feed.");
+      }
+
       setWeeklyData(data);
       setLastSync(format(new Date(), 'HH:mm:ss'));
       
       const dates = Object.keys(data).sort();
-      // Specifically target Mar 3, 2026 as per user request
       const targetSession = '2026-03-03';
       
       if (!selectedDate) {
@@ -63,7 +67,6 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    // Auto-refresh every 2 minutes
     const interval = setInterval(loadData, 120000);
     return () => clearInterval(interval);
   }, []);
@@ -139,7 +142,7 @@ export default function Home() {
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[92vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-[2.5rem] overflow-hidden">
               <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto my-4 shrink-0" />
-              <div className="h-full overflow-y-auto px-4 pb-24 scroll-smooth">
+              <div className="h-full overflow-y-auto px-4 pb-32">
                 <AISidebar 
                   selectedDayEvents={selectedDayEvents} 
                   selectedDate={selectedDate} 
@@ -152,7 +155,7 @@ export default function Home() {
 
         {/* Desktop Sidebar */}
         <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[420px] overflow-hidden">
-          <div className="h-full overflow-y-auto px-6">
+          <div className="h-full overflow-y-auto px-6 pb-20">
             <AISidebar 
               selectedDayEvents={selectedDayEvents} 
               selectedDate={selectedDate} 
