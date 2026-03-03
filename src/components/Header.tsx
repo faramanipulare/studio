@@ -22,6 +22,7 @@ export function Header() {
     audioRef.current = new Audio("https://listen.radioking.com/radio/701141/stream/766385");
     audioRef.current.volume = 0.5;
 
+    // Google Translate Initialization
     const addGoogleTranslateScript = () => {
       if (document.getElementById('google-translate-script')) return;
       const script = document.createElement('script');
@@ -62,7 +63,8 @@ export function Header() {
       combo.value = langCode;
       combo.dispatchEvent(new Event('change'));
     } else {
-      console.warn("Google Translate combo not found yet.");
+      // If the combo isn't ready, we try to use the alternative method or wait
+      console.warn("Google Translate widget initializing...");
     }
   };
 
@@ -71,7 +73,7 @@ export function Header() {
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch(err => console.warn("Autoplay blocked:", err));
+      audioRef.current.play().catch(err => console.warn("Audio interaction required:", err));
     }
     setIsPlaying(!isPlaying);
   };
@@ -85,7 +87,8 @@ export function Header() {
   }).format(time) : '--:--:--';
 
   return (
-    <header className="h-16 lg:h-20 border-b border-border bg-[#050508]/80 backdrop-blur-xl sticky top-0 z-40 px-4 lg:px-8 flex items-center justify-between">
+    <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/80 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
+      {/* Hidden container for the Google Translate Widget */}
       <div id="google_translate_element" className="hidden"></div>
 
       <div className="flex items-center gap-3 lg:gap-5">
@@ -112,7 +115,7 @@ export function Header() {
         <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
           <button 
             onClick={() => changeLanguage('ro')}
-            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10"
+            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70"
             title="Română"
           >
             <svg viewBox="0 0 3 2" className="w-full h-full">
@@ -123,7 +126,7 @@ export function Header() {
           </button>
           <button 
             onClick={() => changeLanguage('en')}
-            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10"
+            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70"
             title="English"
           >
              <svg viewBox="0 0 60 30" className="w-full h-full">

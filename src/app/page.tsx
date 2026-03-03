@@ -15,7 +15,8 @@ import {
   Minus, 
   BrainCircuit,
   CalendarDays,
-  Clock
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,16 +30,19 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [impactFilter, setImpactFilter] = useState<'All' | 'High'>('All');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<string>('');
 
   const loadData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await fetchWeeklyEvents();
       setWeeklyData(data);
       setLastSync(format(new Date(), 'HH:mm:ss'));
       
       const dates = Object.keys(data).sort();
+      // Target current session date
       const march3rd = '2026-03-03';
       
       if (!selectedDate) {
@@ -48,8 +52,9 @@ export default function Home() {
           setSelectedDate(dates[0]);
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to sync live data:", err);
+      setError("Market feed currently unavailable. Please refresh.");
     } finally {
       setLoading(false);
     }
@@ -57,6 +62,7 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
+    // Refresh every 5 minutes to keep it live
     const interval = setInterval(loadData, 300000);
     return () => clearInterval(interval);
   }, []);
@@ -117,6 +123,7 @@ export default function Home() {
       <Header />
       
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+        {/* Mobile Analysis Header Button */}
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 sticky top-0 z-30 backdrop-blur-md flex items-center justify-between shrink-0">
            <div className="flex items-center gap-2">
             <BrainCircuit className="w-5 h-5 text-primary" />
@@ -129,21 +136,25 @@ export default function Home() {
                 OPEN ANALYSIS
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-[2rem] overflow-hidden">
+            <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-[2.5rem] overflow-hidden">
               <div className="flex flex-col h-full">
                 <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto my-4 shrink-0" />
-                <div className="flex-1 overflow-y-auto scrollbar-hide">
+                {/* Dedicated Scroll Container for Mobile Analysis */}
+                <div className="flex-1 overflow-y-auto overflow-x-hidden p-0">
                   <AISidebar 
                     selectedDayEvents={selectedDayEvents} 
                     selectedDate={selectedDate} 
                     weeklyEvents={flatWeeklyEvents}
                   />
+                  {/* Footer Spacer for Ticker Visibility */}
+                  <div className="h-24" />
                 </div>
               </div>
             </SheetContent>
           </Sheet>
         </div>
 
+        {/* Desktop AISidebar Container */}
         <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[420px] overflow-hidden">
           <AISidebar 
             selectedDayEvents={selectedDayEvents} 
@@ -152,6 +163,7 @@ export default function Home() {
           />
         </div>
 
+        {/* Main Content Area */}
         <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden">
           <div className="p-4 lg:p-6 pb-2 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
@@ -204,6 +216,7 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Date Selection Grid */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
               {Object.keys(weeklyData).sort().map((dateStr) => {
                 const date = parseISO(dateStr);
@@ -245,87 +258,97 @@ export default function Home() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32">
-            <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-white/5 bg-white/[0.02]">
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">GMT+2</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Pair</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Event</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Impact</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Bias</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Actual</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Forecast</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/[0.03]">
-                    {filteredEvents.map((event) => (
-                      <tr key={event.id} className="hover:bg-white/5 transition-colors group">
-                        <td className="px-6 py-5 font-mono text-xs text-white/80">{event.time}</td>
-                        <td className="px-6 py-5 font-bold text-xs text-white">{event.currency}</td>
-                        <td className="px-6 py-5 font-bold text-xs text-white truncate max-w-[200px]">{event.event}</td>
-                        <td className="px-6 py-5 text-center">
-                           <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/60'}`}>
-                             {event.impact_percentage}%
-                           </span>
-                        </td>
-                        <td className="px-6 py-5">
-                          <div className="flex justify-center">
-                            <SentimentIndicator sentiment={event.sentiment} />
-                          </div>
-                        </td>
-                        <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold">{event.actual || '--'}</td>
-                        <td className="px-6 py-5 text-right font-mono text-xs text-white/30">{event.forecast || '--'}</td>
+            {error ? (
+              <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-8 text-center space-y-4">
+                <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
+                <h3 className="text-sm font-black text-rose-500 uppercase tracking-widest">{error}</h3>
+                <Button onClick={loadData} className="bg-rose-500 hover:bg-rose-600">Retry Live Sync</Button>
+              </div>
+            ) : (
+              <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                {/* Desktop View Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-white/5 bg-white/[0.02]">
+                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">GMT+2</th>
+                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Pair</th>
+                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Event</th>
+                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Impact</th>
+                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Bias</th>
+                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Actual</th>
+                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Forecast</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="md:hidden divide-y divide-white/5">
-                {filteredEvents.map((event) => (
-                  <div key={event.id} className="p-4 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-[10px] text-primary">{event.time}</span>
-                          <span className="text-[10px] font-black text-white">{event.currency}</span>
-                        </div>
-                        <p className="text-xs font-bold text-white leading-tight">{event.event}</p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <SentimentIndicator sentiment={event.sentiment} />
-                        <span className={`text-[10px] font-black ${event.impact === 'High' ? 'text-rose-400' : 'text-white/30'}`}>
-                          {event.impact_percentage}%
-                        </span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 bg-black/20 p-2 rounded-lg border border-white/5">
-                      <div className="flex flex-col">
-                        <span className="text-[8px] font-black text-white/20 uppercase">Act</span>
-                        <span className="text-[10px] font-mono font-bold text-emerald-400">{event.actual || '--'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[8px] font-black text-white/20 uppercase">Est</span>
-                        <span className="text-[10px] font-mono text-white/40">{event.forecast || '--'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[8px] font-black text-white/20 uppercase">Prev</span>
-                        <span className="text-[10px] font-mono text-white/20">{event.previous || '--'}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {filteredEvents.length === 0 && (
-                <div className="py-20 text-center text-white/20 flex flex-col items-center gap-2">
-                  <CalendarDays className="w-10 h-10 opacity-20" />
-                  <p className="text-[10px] font-black uppercase tracking-widest">No volatility events scheduled</p>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.03]">
+                      {filteredEvents.map((event) => (
+                        <tr key={event.id} className="hover:bg-white/5 transition-colors group">
+                          <td className="px-6 py-5 font-mono text-xs text-white/80">{event.time}</td>
+                          <td className="px-6 py-5 font-bold text-xs text-white">{event.currency}</td>
+                          <td className="px-6 py-5 font-bold text-xs text-white truncate max-w-[200px]">{event.event}</td>
+                          <td className="px-6 py-5 text-center">
+                            <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/60'}`}>
+                              {event.impact_percentage}%
+                            </span>
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="flex justify-center">
+                              <SentimentIndicator sentiment={event.sentiment} />
+                            </div>
+                          </td>
+                          <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold">{event.actual || '--'}</td>
+                          <td className="px-6 py-5 text-right font-mono text-xs text-white/30">{event.forecast || '--'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              )}
-            </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden divide-y divide-white/5">
+                  {filteredEvents.map((event) => (
+                    <div key={event.id} className="p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-[10px] text-primary">{event.time}</span>
+                            <span className="text-[10px] font-black text-white">{event.currency}</span>
+                          </div>
+                          <p className="text-xs font-bold text-white leading-tight">{event.event}</p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <SentimentIndicator sentiment={event.sentiment} />
+                          <span className={`text-[10px] font-black ${event.impact === 'High' ? 'text-rose-400' : 'text-white/30'}`}>
+                            {event.impact_percentage}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 bg-black/20 p-2 rounded-lg border border-white/5">
+                        <div className="flex flex-col">
+                          <span className="text-[8px] font-black text-white/20 uppercase">Act</span>
+                          <span className="text-[10px] font-mono font-bold text-emerald-400">{event.actual || '--'}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[8px] font-black text-white/20 uppercase">Est</span>
+                          <span className="text-[10px] font-mono text-white/40">{event.forecast || '--'}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[8px] font-black text-white/20 uppercase">Prev</span>
+                          <span className="text-[10px] font-mono text-white/20">{event.previous || '--'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {filteredEvents.length === 0 && !loading && (
+                  <div className="py-20 text-center text-white/20 flex flex-col items-center gap-2">
+                    <CalendarDays className="w-10 h-10 opacity-20" />
+                    <p className="text-[10px] font-black uppercase tracking-widest">No volatility events scheduled</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </main>
