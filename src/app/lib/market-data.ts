@@ -1,6 +1,7 @@
 'use server';
 
 import { format, parseISO } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 export type EconomicEvent = {
   id: string;
@@ -8,11 +9,15 @@ export type EconomicEvent = {
   date: string;
   currency: string;
   event: string;
-  impact: 'Low' | 'Medium' | 'High';
+  impact: 'Low' | 'Medium' | 'High' | 'Holiday';
   actual?: string;
   forecast?: string;
   previous?: string;
+  sentiment?: 'Bullish' | 'Bearish' | 'Neutral';
+  impact_percentage?: number;
 };
+
+const BUCHAREST_TZ = 'Europe/Bucharest';
 
 /**
  * Fetches real-time economic calendar data from the ForexFactory (Faireconomy) feed.
@@ -34,14 +39,18 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     const weekly: Record<string, EconomicEvent[]> = {};
 
     rawData.forEach((item: any) => {
-      const dateObj = parseISO(item.date);
-      const dayKey = format(dateObj, 'yyyy-MM-dd');
-      const timeStr = format(dateObj, 'HH:mm');
+      // The feed date is usually in UTC or has an offset
+      // e.g., "2024-03-21T14:00:00-04:00"
+      const dateUtc = parseISO(item.date);
+      const zonedDate = toZonedTime(dateUtc, BUCHAREST_TZ);
+      
+      const dayKey = format(zonedDate, 'yyyy-MM-dd');
+      const timeStr = format(zonedDate, 'HH:mm');
 
       if (!weekly[dayKey]) weekly[dayKey] = [];
 
       weekly[dayKey].push({
-        id: Math.random().toString(36).substring(2, 11),
+        id: `${item.title}-${item.date}-${item.country}`.replace(/\s+/g, '-').toLowerCase(),
         date: dayKey,
         time: timeStr,
         currency: item.country || 'USD',
@@ -50,9 +59,15 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
         actual: item.actual || undefined,
         forecast: item.forecast || undefined,
         previous: item.previous || undefined,
+        // Calculate mock sentiment and impact based on the event's impact level
+        sentiment: item.impact === 'High' ? (Math.random() > 0.5 ? 'Bullish' : 'Bearish') : 'Neutral',
+        impact_percentage: item.impact === 'High' ? Math.floor(Math.random() * 40 + 60) : 
+                           item.impact === 'Medium' ? Math.floor(Math.random() * 30 + 30) : 
+                           Math.floor(Math.random() * 30)
       });
     });
 
+    // Sort by time within each day
     Object.keys(weekly).forEach(day => {
       weekly[day].sort((a, b) => a.time.localeCompare(b.time));
     });
@@ -64,9 +79,10 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
   }
 }
 
-function mapImpact(impact: string): 'Low' | 'Medium' | 'High' {
+function mapImpact(impact: string): 'Low' | 'Medium' | 'High' | 'Holiday' {
   const i = impact?.toLowerCase() || '';
   if (i === 'high') return 'High';
   if (i === 'medium' || i === 'med') return 'Medium';
+  if (i === 'holiday') return 'Holiday';
   return 'Low';
 }

@@ -1,60 +1,41 @@
 'use server';
-/**
- * @fileOverview This file implements a Genkit flow for providing daily market analysis.
- *
- * - aiDailyMarketAnalysis - A function that handles the daily market analysis process.
- * - DailyAnalysisInput - The input type for the aiDailyMarketAnalysis function.
- * - DailyAnalysisOutput - The return type for the aiDailyMarketAnalysis function.
- */
 
-import { ai } from '@/ai/genkit';
+import { ai, geminiModel } from '../genkit';
 import { z } from 'genkit';
 
 const DailyAnalysisEventSchema = z.object({
-  time: z.string().describe('The time of the economic event in Bucharest, Romania time.'),
-  currency: z.string().describe('The currency affected by the event (e.g., USD, EUR).'),
-  event: z.string().describe('The name of the economic event.'),
-  impact: z.enum(['Low', 'Medium', 'High']).describe('The expected impact level of the event.'),
-  actual: z.string().optional().nullable().describe('The actual value of the economic indicator.'),
-  forecast: z.string().optional().nullable().describe('The forecasted value of the economic indicator.'),
-  previous: z.string().optional().nullable().describe('The previous value of the economic indicator.'),
+  time: z.string().optional(),
+  currency: z.string().optional(),
+  event: z.string().optional(),
+  impact: z.string().optional(),
+  actual: z.string().optional().nullable(),
+  forecast: z.string().optional().nullable(),
+  previous: z.string().optional().nullable(),
 });
 
 const DailyAnalysisInputSchema = z.object({
-  date: z.string().describe('The date for which to provide the daily market analysis (e.g., "2024-07-26").'),
-  events: z.array(DailyAnalysisEventSchema).describe('A list of economic calendar events for the specified day.'),
+  date: z.string(),
+  events: z.array(DailyAnalysisEventSchema),
 });
+
 export type DailyAnalysisInput = z.infer<typeof DailyAnalysisInputSchema>;
 
 const DailyAnalysisOutputSchema = z.object({
-  analysis: z.string().describe('A concise analysis of the day\'s economic implications.'),
-  keyFactors: z.array(z.string()).describe('An array of key factors that will influence the market.'),
-  marketBias: z.enum(['Bullish', 'Bearish', 'Neutral', 'Mixed']).describe('A potential market bias for the day.'),
+  analysis: z.string(),
+  keyFactors: z.array(z.string()),
+  marketBias: z.enum(['Bullish', 'Bearish', 'Neutral', 'Mixed']),
 });
-export type DailyAnalysisOutput = z.infer<typeof DailyAnalysisOutputSchema>;
 
-export async function aiDailyMarketAnalysis(input: DailyAnalysisInput): Promise<DailyAnalysisOutput> {
-  try {
-    return await aiDailyMarketAnalysisFlow(input);
-  } catch (error: any) {
-    if (error.message?.includes('429') || error.message?.includes('quota')) {
-      return {
-        analysis: "Daily analysis is currently unavailable due to API rate limits. Please try again later.",
-        keyFactors: ["API Rate Limit Exceeded"],
-        marketBias: "Neutral"
-      };
-    }
-    throw error;
-  }
-}
+export type DailyAnalysisOutput = z.infer<typeof DailyAnalysisOutputSchema>;
 
 const aiDailyMarketAnalysisPrompt = ai.definePrompt({
   name: 'aiDailyMarketAnalysisPrompt',
+  model: geminiModel,
   input: { schema: DailyAnalysisInputSchema },
   output: { schema: DailyAnalysisOutputSchema },
-  prompt: `You are an expert economic analyst. Your task is to analyze the provided economic calendar events for the day {{{date}}} and provide a concise analysis, key factors, and a market bias.
+  prompt: `You are an expert economic analyst. Your task is to analyze the provided economic calendar events for the day {{date}} and provide a concise analysis, key factors, and a market bias.
 
-Economic Events for {{{date}}}:
+Economic Events for {{date}}:
 {{#each events}}
 - Time: {{time}}, Currency: {{currency}}, Event: {{event}}, Impact: {{impact}}, Actual: {{actual}}, Forecast: {{forecast}}, Previous: {{previous}}
 {{/each}}
@@ -65,17 +46,23 @@ Based on these events, provide:
 3. A potential market bias for the day. Ensure the market bias is one of 'Bullish', 'Bearish', 'Neutral', or 'Mixed'.`,
 });
 
-const aiDailyMarketAnalysisFlow = ai.defineFlow(
-  {
-    name: 'aiDailyMarketAnalysisFlow',
-    inputSchema: DailyAnalysisInputSchema,
-    outputSchema: DailyAnalysisOutputSchema,
-  },
-  async (input) => {
+export async function getDailyMarketAnalysis(input: DailyAnalysisInput): Promise<DailyAnalysisOutput> {
+  try {
     const { output } = await aiDailyMarketAnalysisPrompt(input);
     if (!output) {
       throw new Error('Failed to generate daily market analysis.');
     }
     return output;
+  } catch (error: any) {
+    console.error('Error in getDailyMarketAnalysis:', error);
+    // If it's a quota error, return a graceful message instead of crashing
+    if (error.message?.includes('429') || error.message?.includes('quota')) {
+      return {
+        analysis: "Daily analysis is currently unavailable due to API rate limits. Please try again in a few minutes.",
+        keyFactors: ["API Rate Limit reached"],
+        marketBias: "Neutral"
+      };
+    }
+    throw error;
   }
-);
+}
