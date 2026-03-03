@@ -22,6 +22,7 @@ export type EconomicEvent = {
  */
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   const t = new Date().getTime();
+  // Using a direct, high-frequency institutional source with cache-busting
   const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?timestamp=${t}`;
 
   try {
@@ -100,7 +101,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     return weekly;
   } catch (error: any) {
     console.error("CRITICAL LIVE SYNC ERROR:", error.message);
-    return {}; 
+    throw error; // Re-throw to be handled by the UI
   }
 }
 
