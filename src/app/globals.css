@@ -38,11 +38,25 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased;
-    cursor: crosshair; /* Elegant trading crosshair */
+    cursor: crosshair;
   }
 }
 
-/* Custom scrollbar for a sleeker look */
+/* Hide Google Translate Bar */
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+body {
+  top: 0px !important;
+}
+.goog-logo-link {
+  display: none !important;
+}
+.trans-section {
+  display: none;
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -62,7 +76,7 @@
 .animate-ticker {
   display: flex;
   white-space: nowrap;
-  animation: scroll 60s linear infinite; /* Slower speed for readability */
+  animation: scroll 60s linear infinite;
 }
 
 .animate-ticker:hover {
@@ -75,9 +89,4 @@
 
 .glass-panel {
   @apply bg-card/40 backdrop-blur-md border border-white/5;
-}
-
-/* Custom cursor glow effect for interactive elements */
-a:hover, button:hover {
-  cursor: pointer;
 }

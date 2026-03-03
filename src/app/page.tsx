@@ -34,7 +34,6 @@ export default function Home() {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Force fetch fresh data bypassing browser cache
       const data = await fetchWeeklyEvents();
       setWeeklyData(data);
       setLastSync(format(new Date(), 'HH:mm:ss'));
@@ -58,7 +57,6 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    // Auto-refresh every 5 minutes
     const interval = setInterval(loadData, 300000);
     return () => clearInterval(interval);
   }, []);
@@ -137,7 +135,7 @@ export default function Home() {
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-[2rem] flex flex-col">
               <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto my-4 shrink-0" />
-              <div className="flex-1 overflow-y-auto pb-10">
+              <div className="flex-1 overflow-y-auto px-4 pb-12">
                 <AISidebar 
                   selectedDayEvents={selectedDayEvents} 
                   selectedDate={selectedDate} 
@@ -211,7 +209,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Daily Selector - Mobile Responsive Grid */}
+            {/* Daily Selector */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
               {Object.keys(weeklyData).sort().map((dateStr) => {
                 const date = parseISO(dateStr);
@@ -244,9 +242,6 @@ export default function Home() {
                           <span className="text-[9px] font-bold text-primary">{avgImpact}%</span>
                           <SentimentIndicator sentiment={mainSentiment} />
                         </div>
-                        <span className="text-[8px] font-black text-white/20 uppercase">
-                          {dayEvents.length} E
-                        </span>
                       </div>
                     </div>
                   </button>

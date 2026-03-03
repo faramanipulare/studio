@@ -1,13 +1,20 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Clock, RefreshCw, Zap, ShieldCheck, Volume2, VolumeX, Radio } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Clock, RefreshCw, Zap, ShieldCheck, Volume2, VolumeX, Radio, Globe } from 'lucide-react';
+
+declare global {
+  interface Window {
+    googleTranslateElementInit: () => void;
+    google: any;
+  }
+}
 
 export function Header() {
   const [time, setTime] = useState<Date | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isTranslateLoaded, setIsTranslateLoaded] = useState(false);
 
   useEffect(() => {
     setTime(new Date());
@@ -17,6 +24,31 @@ export function Header() {
     audioRef.current = new Audio("https://listen.radioking.com/radio/701141/stream/766385");
     audioRef.current.volume = 0.5;
 
+    // Google Translate Initialization
+    const addGoogleTranslateScript = () => {
+      if (document.getElementById('google-translate-script')) return;
+      const script = document.createElement('script');
+      script.id = 'google-translate-script';
+      script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.async = true;
+      document.body.appendChild(script);
+
+      window.googleTranslateElementInit = () => {
+        new window.google.translate.TranslateElement(
+          { 
+            pageLanguage: 'en', 
+            includedLanguages: 'ro,en',
+            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false 
+          }, 
+          'google_translate_element'
+        );
+        setIsTranslateLoaded(true);
+      };
+    };
+
+    addGoogleTranslateScript();
+
     return () => {
       clearInterval(timer);
       if (audioRef.current) {
@@ -25,6 +57,14 @@ export function Header() {
       }
     };
   }, []);
+
+  const changeLanguage = (langCode: 'ro' | 'en') => {
+    const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+    if (select) {
+      select.value = langCode;
+      select.dispatchEvent(new Event('change'));
+    }
+  };
 
   const toggleRadio = () => {
     if (!audioRef.current) return;
@@ -47,6 +87,9 @@ export function Header() {
 
   return (
     <header className="h-16 lg:h-20 border-b border-border bg-[#050508]/80 backdrop-blur-xl sticky top-0 z-40 px-4 lg:px-8 flex items-center justify-between">
+      {/* Hidden Google Translate Element */}
+      <div id="google_translate_element" className="hidden"></div>
+
       <div className="flex items-center gap-3 lg:gap-5">
         <div className="relative group shrink-0">
           <div className="absolute -inset-1 bg-gradient-to-r from-primary to-blue-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
@@ -67,43 +110,59 @@ export function Header() {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 lg:gap-10">
-        <div className="flex items-center gap-4 lg:gap-10">
-          {/* Radio Toggle */}
+      <div className="flex items-center gap-3 lg:gap-8">
+        {/* Language Switcher */}
+        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
           <button 
-            onClick={toggleRadio}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
-              isPlaying 
-                ? 'bg-primary/20 border-primary text-primary animate-pulse' 
-                : 'bg-white/5 border-white/10 text-white/40 hover:text-white'
-            }`}
+            onClick={() => changeLanguage('ro')}
+            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10"
+            title="Română"
           >
-            <Radio className="w-3.5 h-3.5" />
-            <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline">Pescobar FM</span>
-            {isPlaying ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+            <svg viewBox="0 0 3 2" className="w-full h-full">
+              <rect width="1" height="2" fill="#002B7F"/>
+              <rect width="1" height="2" x="1" fill="#FCD116"/>
+              <rect width="1" height="2" x="2" fill="#CE1126"/>
+            </svg>
           </button>
+          <button 
+            onClick={() => changeLanguage('en')}
+            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10"
+            title="English"
+          >
+             <svg viewBox="0 0 60 30" className="w-full h-full">
+              <clipPath id="s">
+                <path d="M0,0 v30 h60 v-30 z"/>
+              </clipPath>
+              <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
+              <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/>
+              <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="4"/>
+              <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10"/>
+              <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" strokeWidth="6"/>
+            </svg>
+          </button>
+        </div>
 
-          <div className="hidden sm:flex flex-col items-end">
-            <div className="flex items-center text-[8px] lg:text-[9px] font-black text-muted-foreground gap-1.5 tracking-widest">
-              <RefreshCw className="w-2.5 h-2.5 text-primary animate-spin-slow" />
-              STATUS
-            </div>
-            <span className="text-[10px] lg:text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5">
-              <span className="w-1 h-1 lg:w-1.5 lg:h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              LIVE FEED
-            </span>
-          </div>
-          
-          <div className="hidden sm:block h-8 lg:h-10 w-px bg-white/5" />
+        {/* Radio Toggle */}
+        <button 
+          onClick={toggleRadio}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
+            isPlaying 
+              ? 'bg-primary/20 border-primary text-primary animate-pulse' 
+              : 'bg-white/5 border-white/10 text-white/40 hover:text-white'
+          }`}
+        >
+          <Radio className="w-3.5 h-3.5" />
+          <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline">Pescobar FM</span>
+          {isPlaying ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+        </button>
 
-          <div className="flex flex-col items-end min-w-[80px] lg:min-w-[140px]">
-            <div className="flex items-center text-[8px] lg:text-[9px] font-black text-muted-foreground gap-1.5 tracking-widest uppercase">
-              <Clock className="w-2.5 h-2.5 text-primary" />
-              <span className="hidden lg:inline">GMT+2 BUCHAREST</span>
-              <span className="lg:hidden">RO TIME</span>
-            </div>
-            <span className="text-sm lg:text-lg font-mono font-black text-white tabular-nums">{bucharestTime}</span>
+        <div className="hidden sm:flex flex-col items-end min-w-[80px] lg:min-w-[140px]">
+          <div className="flex items-center text-[8px] lg:text-[9px] font-black text-muted-foreground gap-1.5 tracking-widest uppercase">
+            <Clock className="w-2.5 h-2.5 text-primary" />
+            <span className="hidden lg:inline">GMT+2 BUCHAREST</span>
+            <span className="lg:hidden">RO TIME</span>
           </div>
+          <span className="text-sm lg:text-lg font-mono font-black text-white tabular-nums">{bucharestTime}</span>
         </div>
         
         <button className="hidden md:block bg-primary text-white text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-lg hover:brightness-110 transition-all glow-primary shadow-xl">
