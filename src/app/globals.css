@@ -62,7 +62,7 @@
 .animate-ticker {
   display: flex;
   white-space: nowrap;
-  animation: scroll 60s linear infinite;
+  animation: scroll 60s linear infinite; /* Slower speed for readability */
 }
 
 .animate-ticker:hover {

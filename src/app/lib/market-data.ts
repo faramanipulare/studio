@@ -20,25 +20,23 @@ export type EconomicEvent = {
 const BUCHAREST_TZ = 'Europe/Bucharest';
 
 /**
- * Fetches institutional economic calendar data.
- * This feed is the same source used by top-tier trading calendars.
+ * Fetches institutional economic calendar data (ForexFactory Source).
+ * Forces a fresh fetch to ensure data matches current session (March 2026).
  */
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   try {
-    // We use a cache-busting timestamp and 'no-store' to ensure 100% fresh data
-    const ts = new Date().getTime();
-    const response = await fetch(`https://nfs.faireconomy.media/ff_calendar_thisweek.json?v=${ts}`, {
-      cache: 'no-store', // Disable caching for real-time accuracy
+    // Force fresh data using a timestamp to bypass any intermediary caches
+    const cacheBuster = Date.now();
+    const response = await fetch(`https://nfs.faireconomy.media/ff_calendar_thisweek.json?t=${cacheBuster}`, {
+      cache: 'no-store',
       headers: {
         'Accept': 'application/json',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
-        'Expires': '0',
-        'User-Agent': 'Mozilla/5.0 (Institutional Market Intelligence Agent)'
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
       }
     });
 
-    if (!response.ok) throw new Error(`Data feed connection failed: ${response.status}`);
+    if (!response.ok) throw new Error(`Feed connection failed: ${response.status}`);
 
     const rawData = await response.json();
     const weekly: Record<string, EconomicEvent[]> = {};

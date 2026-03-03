@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -79,7 +78,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   };
 
   return (
-    <div className="w-full lg:w-[420px] flex flex-col gap-6 p-4 lg:p-6 h-full lg:h-screen overflow-y-auto bg-[#1F1C21] border-r border-white/5 lg:border-r-0 pb-20 lg:pb-6">
+    <div className="w-full lg:w-[420px] flex flex-col gap-6 p-4 lg:p-6 h-full lg:h-screen overflow-y-auto bg-[#1F1C21] border-r border-white/5 lg:border-r-0 pb-32">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
