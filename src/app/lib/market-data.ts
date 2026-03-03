@@ -22,9 +22,8 @@ const BUCHAREST_TZ = 'Europe/Bucharest';
 
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   try {
-    // Using the FairEconomy calendar feed (same source as ForexFactory)
     const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', {
-      next: { revalidate: 300 }, // Cache for 5 minutes
+      next: { revalidate: 300 },
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -37,7 +36,6 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     const weekly: Record<string, EconomicEvent[]> = {};
 
     rawData.forEach((item: any) => {
-      // Parse UTC date and convert to Bucharest time
       const dateUtc = parseISO(item.date);
       const zonedDate = toZonedTime(dateUtc, BUCHAREST_TZ);
       
@@ -46,7 +44,6 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
 
       if (!weekly[dayKey]) weekly[dayKey] = [];
 
-      // SMC/Institutional bias logic simulation
       let sentiment: 'Bullish' | 'Bearish' | 'Neutral' | 'Mixed' = 'Neutral';
       let impact_percentage = 0;
 

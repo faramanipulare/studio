@@ -87,10 +87,10 @@ export default function Home() {
   };
 
   const SentimentIndicator = ({ sentiment }: { sentiment?: string }) => {
-    if (sentiment === 'Bullish') return <TrendingUp className="w-4 h-4 text-emerald-400" title="Bullish" />;
-    if (sentiment === 'Bearish') return <TrendingDown className="w-4 h-4 text-rose-400" title="Bearish" />;
-    if (sentiment === 'Mixed') return <Activity className="w-4 h-4 text-orange-400" title="Mixed" />;
-    return <Minus className="w-4 h-4 text-slate-500" title="Neutral" />;
+    if (sentiment === 'Bullish') return <TrendingUp className="w-4 h-4 text-emerald-400" />;
+    if (sentiment === 'Bearish') return <TrendingDown className="w-4 h-4 text-rose-400" />;
+    if (sentiment === 'Mixed') return <Activity className="w-4 h-4 text-orange-400" />;
+    return <Minus className="w-4 h-4 text-slate-500" />;
   };
 
   if (loading && Object.keys(weeklyData).length === 0) {
@@ -115,35 +115,20 @@ export default function Home() {
       <Header />
       
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden pb-12 lg:pb-0">
-        {/* Mobile Sub-Header for Controls */}
+        {/* Mobile Header Controls */}
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 sticky top-16 z-30 backdrop-blur-md flex items-center justify-between">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white">
-                <Menu className="w-6 h-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] bg-[#1F1C21] p-0 border-white/5">
-               <AISidebar 
-                selectedDayEvents={selectedDayEvents} 
-                selectedDate={selectedDate} 
-                weeklyEvents={flatWeeklyEvents}
-              />
-            </SheetContent>
-          </Sheet>
-
-          <div className="flex items-center gap-2">
-            <BrainCircuit className="w-4 h-4 text-primary" />
-            <span className="text-[10px] font-black uppercase text-white tracking-widest">Market IQ</span>
+           <div className="flex items-center gap-2">
+            <BrainCircuit className="w-5 h-5 text-primary" />
+            <span className="text-[11px] font-black uppercase text-white tracking-widest">Market IQ</span>
           </div>
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button size="sm" className="bg-primary/10 text-primary text-[9px] font-black border border-primary/20">
-                ANALYSIS
+              <Button size="sm" className="bg-primary hover:bg-primary/80 text-white text-[10px] font-black px-4 h-8">
+                OPEN ANALYSIS
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[80vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-3xl overflow-y-auto">
+            <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-3xl overflow-y-auto">
               <AISidebar 
                 selectedDayEvents={selectedDayEvents} 
                 selectedDate={selectedDate} 
@@ -210,7 +195,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Daily Selector - Better Mobile Handling */}
+          {/* Daily Selector - Mobile Responsive Grid */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {Object.keys(weeklyData).sort().map((dateStr) => {
               const date = parseISO(dateStr);
@@ -253,9 +238,8 @@ export default function Home() {
             })}
           </div>
 
-          {/* Data Display - Card-based on Mobile, Table on Desktop */}
+          {/* Table / List View */}
           <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
-            {/* Table View (Desktop) */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
@@ -293,7 +277,6 @@ export default function Home() {
               </table>
             </div>
 
-            {/* List View (Mobile) */}
             <div className="md:hidden divide-y divide-white/5">
               {filteredEvents.map((event) => (
                 <div key={event.id} className="p-4 space-y-3">
