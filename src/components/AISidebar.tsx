@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { getWeeklyMarketOverview, type WeeklyMarketOverviewOutput } from '@/ai/flows/ai-weekly-market-overview-flow';
 import { aiDailyMarketAnalysis, type DailyAnalysisOutput } from '@/ai/flows/ai-daily-market-analysis-flow';
 import { type EconomicEvent } from '@/app/lib/market-data';
+import { format, parseISO } from 'date-fns';
 
 interface AISidebarProps {
   selectedDayEvents: EconomicEvent[] | null;
@@ -21,7 +22,6 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
   const [loadingWeekly, setLoadingWeekly] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
   
-  // Track processed dates to avoid redundant calls
   const lastProcessedDate = useRef<string | null>(null);
   const lastWeeklyEventCount = useRef<number>(0);
 
@@ -101,7 +101,6 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
         </div>
       </div>
 
-      {/* Weekly Overview */}
       <Card className="border-white/5 bg-white/[0.01] overflow-hidden relative shadow-2xl rounded-2xl">
         {loadingWeekly && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
@@ -137,7 +136,6 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
         </CardContent>
       </Card>
 
-      {/* Daily Analysis */}
       <Card className="border-white/5 bg-white/[0.01] flex-1 overflow-hidden relative flex flex-col shadow-2xl rounded-2xl">
         {loadingDaily && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
@@ -154,7 +152,7 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
                 Session Intelligence
               </CardTitle>
               <p className="text-[10px] font-black mt-1 uppercase tracking-tighter text-white">
-                {selectedDate ? format(new Date(selectedDate), 'MMMM dd, yyyy') : 'Terminal Idle'}
+                {selectedDate ? format(parseISO(selectedDate), 'MMMM dd, yyyy') : 'Terminal Idle'}
               </p>
             </div>
             {dailyAnalysis && (

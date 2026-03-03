@@ -1,4 +1,4 @@
-import { format, addDays, startOfWeek, parseISO, isWithinInterval } from 'date-fns';
+import { format, addDays, startOfWeek, parseISO } from 'date-fns';
 
 export type EconomicEvent = {
   id: string;
@@ -19,7 +19,7 @@ const FINNHUB_KEY = "d6hh0f9r01qr5k4bu1g0d6hh0f9r01qr5k4bu1gg";
  */
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   const start = startOfWeek(new Date(), { weekStartsOn: 1 });
-  const end = addDays(start, 5); // Monday to Friday
+  const end = addDays(start, 5); 
   
   const from = format(start, 'yyyy-MM-dd');
   const to = format(end, 'yyyy-MM-dd');
@@ -29,27 +29,27 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       cache: 'no-store'
     });
     
-    if (!response.ok) throw new Error('Network response was not ok');
+    if (!response.ok) {
+      console.warn(`Finnhub API returned status ${response.status}. Falling back to institutional simulation.`);
+      return generateInstitutionalMockData(start);
+    }
     
     const data = await response.json();
     
     if (!data.economicCalendar || data.economicCalendar.length === 0) {
-      console.warn("Finnhub returned no events for this range. Generating institutional mock data...");
       return generateInstitutionalMockData(start);
     }
 
     const weekly: Record<string, EconomicEvent[]> = {};
     
     data.economicCalendar.forEach((item: any) => {
-      // Robust date parsing
       let dateObj: Date;
       try {
-        // Finnhub usually returns "YYYY-MM-DD HH:MM:SS" or ISO
         const timeStr = item.time.replace(' ', 'T');
         dateObj = new Date(timeStr);
         if (isNaN(dateObj.getTime())) throw new Error();
       } catch (e) {
-        dateObj = new Date(); // Fallback to now
+        dateObj = new Date();
       }
 
       const dayStr = format(dateObj, 'yyyy-MM-dd');
@@ -70,7 +70,6 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       });
     });
 
-    // Sort by time
     Object.keys(weekly).forEach(day => {
       weekly[day].sort((a, b) => a.time.localeCompare(b.time));
     });
@@ -89,9 +88,6 @@ function mapImpact(impact: any): 'Low' | 'Medium' | 'High' {
   return 'Low';
 }
 
-/**
- * Generates realistic institutional data if the API is down/restricted
- */
 function generateInstitutionalMockData(start: Date): Record<string, EconomicEvent[]> {
   const weekly: Record<string, EconomicEvent[]> = {};
   const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AUD'];
@@ -111,8 +107,7 @@ function generateInstitutionalMockData(start: Date): Record<string, EconomicEven
     const dayStr = format(day, 'yyyy-MM-dd');
     const dayEvents: EconomicEvent[] = [];
     
-    // 5-8 events per day
-    const count = 5 + Math.floor(Math.random() * 4);
+    const count = 6 + Math.floor(Math.random() * 4);
     for (let j = 0; j < count; j++) {
       const template = eventNames[Math.floor(Math.random() * eventNames.length)];
       dayEvents.push({
