@@ -3,20 +3,42 @@
 
 AI-Powered Economic Calendar and Institutional Market Analysis.
 
-## VPS Deployment & Environment Variables
+## VPS Deployment & Troubleshooting (502 Bad Gateway)
 
-Pentru ca AI-ul să funcționeze pe VPS, **trebuie** să creezi un fișier `.env` în rădăcina proiectului:
+Dacă primești eroarea **502 Bad Gateway**, urmează acești pași pentru a configura corect VPS-ul:
 
-1. Obține o cheie API de aici: [Google AI Studio](https://aistudio.google.com/)
-2. Adaugă următoarea linie în fișierul `.env`:
-   ```env
-   GOOGLE_GENAI_API_KEY=cheia_ta_aici
-   ```
+### 1. Portul Aplicației
+Aplicația este configurată să ruleze pe portul **3000**. Asigură-te că fișierul tău de configurare Nginx (`/etc/nginx/sites-available/default`) trimite traficul către portul corect:
+```nginx
+location / {
+    proxy_pass http://localhost:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+}
+```
 
-### Pornire cu PM2
-Dacă folosești PM2, după ce ai modificat `.env`, rulează:
+### 2. Environment Variables
+Trebuie să ai o cheie API Gemini validă. Creează fișierul `.env` în rădăcina proiectului:
+```env
+GOOGLE_GENAI_API_KEY=cheia_ta_de_la_google_ai_studio
+```
+
+### 3. Instalare și Pornire
+Execută următoarele comenzi pe VPS pentru a curăța și porni corect:
 ```bash
-pm2 restart fara-manipulare --update-env
+# Șterge modulele vechi și reinstalează
+rm -rf node_modules package-lock.json
+npm install
+
+# Construiește aplicația pentru producție
+npm run build
+
+# Pornire cu PM2
+pm2 delete fara-manipulare
+pm2 start npm --name "fara-manipulare" -- start --update-env
 ```
 
 ## Tech Stack

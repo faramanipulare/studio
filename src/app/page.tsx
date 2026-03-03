@@ -15,7 +15,8 @@ import {
   TrendingDown, 
   Minus, 
   BrainCircuit,
-  CalendarDays
+  CalendarDays,
+  Menu
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -114,19 +115,35 @@ export default function Home() {
       <Header />
       
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden pb-12 lg:pb-0">
-        {/* Mobile AI Analysis Trigger */}
-        <div className="lg:hidden flex justify-between items-center p-3 bg-[#161419] border-b border-white/5 sticky top-16 z-30 backdrop-blur-md">
-          <div className="flex items-center gap-2">
-            <BrainCircuit className="w-4 h-4 text-primary" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-white">Institutional Intel</span>
-          </div>
+        {/* Mobile Sub-Header for Controls */}
+        <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 sticky top-16 z-30 backdrop-blur-md flex items-center justify-between">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 text-[9px] font-black uppercase bg-primary/10 border-primary/20 text-primary px-3">
-                Review Session Bias
+              <Button variant="ghost" size="icon" className="text-white">
+                <Menu className="w-6 h-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 overflow-y-auto rounded-t-3xl">
+            <SheetContent side="left" className="w-[300px] bg-[#1F1C21] p-0 border-white/5">
+               <AISidebar 
+                selectedDayEvents={selectedDayEvents} 
+                selectedDate={selectedDate} 
+                weeklyEvents={flatWeeklyEvents}
+              />
+            </SheetContent>
+          </Sheet>
+
+          <div className="flex items-center gap-2">
+            <BrainCircuit className="w-4 h-4 text-primary" />
+            <span className="text-[10px] font-black uppercase text-white tracking-widest">Market IQ</span>
+          </div>
+
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button size="sm" className="bg-primary/10 text-primary text-[9px] font-black border border-primary/20">
+                ANALYSIS
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[80vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-3xl overflow-y-auto">
               <AISidebar 
                 selectedDayEvents={selectedDayEvents} 
                 selectedDate={selectedDate} 
@@ -146,43 +163,43 @@ export default function Home() {
         </div>
 
         {/* Main Feed Content */}
-        <div className="flex-1 flex flex-col p-3 lg:p-6 gap-4 lg:gap-6 bg-[#161419] overflow-y-auto scrollbar-hide">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-3 lg:pb-4 gap-3">
+        <div className="flex-1 flex flex-col p-4 lg:p-6 gap-6 bg-[#161419] overflow-y-auto">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-primary font-bold text-[9px] lg:text-[10px] uppercase tracking-[0.2em]">
+              <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.2em]">
                 <Activity className="w-3 h-3 animate-pulse" />
-                Live Liquidty Feed
+                Live Feed
               </div>
-              <h2 className="text-lg lg:text-2xl font-black tracking-tight text-white flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+              <h2 className="text-xl lg:text-2xl font-black tracking-tight text-white flex flex-col sm:flex-row sm:items-center gap-2">
                 Economic Calendar
-                <span className="hidden sm:inline text-white/20">/</span>
-                <span className="text-white/60 text-xs lg:text-sm font-medium tracking-normal">
-                  {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMMM d') : 'Selection required...'}
+                <span className="text-white/20 hidden sm:inline">/</span>
+                <span className="text-white/40 text-sm font-medium tracking-normal">
+                  {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMMM d') : 'Selection required'}
                 </span>
               </h2>
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+            <div className="flex items-center gap-2">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={loadData}
                 disabled={loading}
-                className="h-7 lg:h-8 px-2.5 lg:px-3 border-white/10 hover:bg-white/5 bg-[#0c0e14] text-white shrink-0"
+                className="h-8 px-3 border-white/10 hover:bg-white/5 bg-[#0c0e14] text-white"
               >
-                <RefreshCcw className={`w-3 h-3 mr-1.5 lg:mr-2 ${loading ? 'animate-spin' : ''}`} />
-                <span className="text-[8px] lg:text-[9px] font-black uppercase">Refresh</span>
+                <RefreshCcw className={`w-3.5 h-3.5 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                <span className="text-[9px] font-black uppercase">Refresh</span>
               </Button>
-              <div className="flex bg-[#0c0e14] rounded-lg p-0.5 border border-white/5 shrink-0">
+              <div className="flex bg-[#0c0e14] rounded-lg p-0.5 border border-white/5">
                 {(['All', 'High'] as const).map((impact) => (
                   <Button
                     key={impact}
                     variant="ghost"
                     size="sm"
                     onClick={() => setImpactFilter(impact)}
-                    className={`h-6 lg:h-7 px-2.5 lg:px-3 text-[8px] lg:text-[9px] font-black uppercase rounded-md transition-all ${
+                    className={`h-7 px-4 text-[9px] font-black uppercase rounded-md transition-all ${
                       impactFilter === impact 
-                        ? 'bg-primary text-white' 
+                        ? 'bg-primary text-white shadow-lg' 
                         : 'text-white/40 hover:text-white'
                     }`}
                   >
@@ -193,8 +210,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Daily Selector Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 lg:gap-3">
+          {/* Daily Selector - Better Mobile Handling */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {Object.keys(weeklyData).sort().map((dateStr) => {
               const date = parseISO(dateStr);
               const isSelected = selectedDate === dateStr;
@@ -205,28 +222,28 @@ export default function Home() {
                 <button
                   key={dateStr}
                   onClick={() => setSelectedDate(dateStr)}
-                  className={`group p-2.5 lg:p-3 rounded-xl border transition-all text-left relative overflow-hidden ${
+                  className={`group p-4 rounded-xl border transition-all text-left relative overflow-hidden ${
                     isSelected 
                       ? 'bg-primary/10 border-primary/50 ring-1 ring-primary/20' 
                       : 'bg-[#0c0e14] border-white/5 hover:border-white/20'
                   }`}
                 >
                   <div className="flex flex-col relative z-10">
-                    <span className={`text-[8px] lg:text-[9px] font-black uppercase tracking-widest mb-0.5 lg:mb-1 ${
+                    <span className={`text-[10px] font-black uppercase tracking-widest mb-1 ${
                       isSelected ? 'text-primary' : 'text-white/40'
                     }`}>
                       {format(date, 'EEEE')}
                     </span>
-                    <span className="text-sm lg:text-base font-black tracking-tight text-white">
+                    <span className="text-base lg:text-xl font-black tracking-tight text-white">
                       {format(date, 'MMM dd')}
                     </span>
                     
-                    <div className="mt-1.5 lg:mt-2 flex items-center justify-between">
-                      <div className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-md border border-white/5">
-                        <span className="text-[9px] lg:text-[10px] font-bold text-primary">{avgImpact}%</span>
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2 bg-black/40 px-2 py-1 rounded-md border border-white/5">
+                        <span className="text-[10px] font-bold text-primary">{avgImpact}%</span>
                         <SentimentIndicator sentiment={mainSentiment} />
                       </div>
-                      <span className="text-[8px] lg:text-[9px] font-black text-white/20 uppercase">
+                      <span className="text-[9px] font-black text-white/20 uppercase">
                         {dayEvents.length} E
                       </span>
                     </div>
@@ -236,18 +253,18 @@ export default function Home() {
             })}
           </div>
 
-          {/* Data Display */}
-          <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl flex-1">
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto h-full">
-              <table className="w-full text-left border-collapse">
-                <thead className="sticky top-0 bg-[#0c0e14] z-10">
+          {/* Data Display - Card-based on Mobile, Table on Desktop */}
+          <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+            {/* Table View (Desktop) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
                   <tr className="border-b border-white/5 bg-white/[0.02]">
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">GMT+2</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Pair</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Event</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Impact %</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Sentiment</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Bias</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Actual</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Forecast</th>
                   </tr>
@@ -255,33 +272,33 @@ export default function Home() {
                 <tbody className="divide-y divide-white/[0.03]">
                   {filteredEvents.map((event) => (
                     <tr key={event.id} className="hover:bg-white/5 transition-colors group">
-                      <td className="px-6 py-4 font-mono text-xs text-white/80">{event.time}</td>
-                      <td className="px-6 py-4 font-bold text-xs text-white">{event.currency}</td>
-                      <td className="px-6 py-4 font-bold text-xs text-white truncate max-w-[220px]">{event.event}</td>
-                      <td className="px-6 py-4 text-center">
-                         <span className={`text-[10px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/60'}`}>
+                      <td className="px-6 py-5 font-mono text-xs text-white/80">{event.time}</td>
+                      <td className="px-6 py-5 font-bold text-xs text-white">{event.currency}</td>
+                      <td className="px-6 py-5 font-bold text-xs text-white truncate max-w-[200px]">{event.event}</td>
+                      <td className="px-6 py-5 text-center">
+                         <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/60'}`}>
                            {event.impact_percentage}%
                          </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-5">
                         <div className="flex justify-center">
                           <SentimentIndicator sentiment={event.sentiment} />
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-right font-mono text-xs text-emerald-400 font-bold">{event.actual || '--'}</td>
-                      <td className="px-6 py-4 text-right font-mono text-xs text-white/30">{event.forecast || '--'}</td>
+                      <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold">{event.actual || '--'}</td>
+                      <td className="px-6 py-5 text-right font-mono text-xs text-white/30">{event.forecast || '--'}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Mobile List View */}
+            {/* List View (Mobile) */}
             <div className="md:hidden divide-y divide-white/5">
               {filteredEvents.map((event) => (
                 <div key={event.id} className="p-4 space-y-3">
                   <div className="flex justify-between items-start">
-                    <div className="space-y-0.5">
+                    <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-[10px] text-primary">{event.time}</span>
                         <span className="text-[10px] font-black text-white">{event.currency}</span>
@@ -290,8 +307,8 @@ export default function Home() {
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <SentimentIndicator sentiment={event.sentiment} />
-                      <span className={`text-[9px] font-black ${event.impact === 'High' ? 'text-rose-400' : 'text-white/30'}`}>
-                        {event.impact_percentage}% IMP
+                      <span className={`text-[10px] font-black ${event.impact === 'High' ? 'text-rose-400' : 'text-white/30'}`}>
+                        {event.impact_percentage}%
                       </span>
                     </div>
                   </div>
@@ -315,8 +332,8 @@ export default function Home() {
 
             {filteredEvents.length === 0 && (
               <div className="py-20 text-center text-white/20 flex flex-col items-center gap-2">
-                <CalendarDays className="w-8 h-8 opacity-20" />
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] italic">No Volatility Expected</p>
+                <CalendarDays className="w-10 h-10 opacity-20" />
+                <p className="text-[10px] font-black uppercase tracking-widest">No scheduled volatility events</p>
               </div>
             )}
           </div>
