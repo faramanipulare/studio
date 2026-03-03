@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { BrainCircuit, TrendingUp, TrendingDown, Minus, Info, Sparkles, Loader2 } from 'lucide-react';
+import { BrainCircuit, TrendingUp, TrendingDown, Minus, Info, Sparkles, Loader2, Target, BarChart3 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -64,110 +64,133 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
       case 'Bullish': return <TrendingUp className="w-5 h-5 text-emerald-400" />;
       case 'Bearish': return <TrendingDown className="w-5 h-5 text-rose-400" />;
       case 'Neutral': return <Minus className="w-5 h-5 text-slate-400" />;
-      default: return <Info className="w-5 h-5 text-secondary" />;
+      default: return <Info className="w-5 h-5 text-primary" />;
     }
   };
 
   return (
-    <div className="w-[380px] flex flex-col gap-6 p-6 h-[calc(100vh-64px)] overflow-y-auto bg-card/30 border-r border-border custom-scrollbar">
-      <div className="flex items-center gap-2 mb-2">
-        <div className="p-2 bg-primary/20 rounded-lg">
-          <BrainCircuit className="w-5 h-5 text-primary" />
+    <div className="w-[420px] flex flex-col gap-6 p-6 h-[calc(100vh-80px)] overflow-y-auto bg-[#0a0c12] border-r border-border/60 custom-scrollbar">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
+            <BrainCircuit className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-sm font-black uppercase tracking-widest text-white">AI Quantitative Analysis</h2>
+            <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-tighter mt-0.5">GEMINI 2.5 FLASH POWERED</p>
+          </div>
         </div>
-        <h2 className="text-lg font-bold">AI Intelligence</h2>
       </div>
 
       {/* Weekly Overview */}
-      <Card className="border-border bg-card/60 overflow-hidden relative">
+      <Card className="border-border/40 bg-white/[0.02] overflow-hidden relative shadow-2xl">
         {loadingWeekly && (
-          <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
           </div>
         )}
-        <CardHeader className="pb-3 border-b border-border/50">
-          <div className="flex justify-between items-start">
-            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              Weekly Outlook
+        <CardHeader className="pb-4 border-b border-border/20 bg-white/[0.01]">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
+              Strategic Outlook
             </CardTitle>
-            <Badge variant="outline" className="text-secondary border-secondary/30">
-              Confidence: {weeklyAnalysis?.successProbability ?? 0}%
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 font-black text-[10px]">
+              {weeklyAnalysis?.successProbability ?? 0}% PROBABILITY
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="pt-4 flex flex-col gap-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-medium">
-              <span>Success Probability</span>
-              <span>{weeklyAnalysis?.successProbability ?? 0}%</span>
+        <CardContent className="pt-5 flex flex-col gap-5">
+          <div className="space-y-3">
+            <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-wider">
+              <span>Success Variance</span>
+              <span className="text-primary">{weeklyAnalysis?.successProbability ?? 0}%</span>
             </div>
-            <Progress value={weeklyAnalysis?.successProbability ?? 0} className="h-2" />
+            <Progress value={weeklyAnalysis?.successProbability ?? 0} className="h-1.5 bg-white/5" />
           </div>
-          <p className="text-sm text-foreground/90 leading-relaxed italic">
-            "{weeklyAnalysis?.weeklyOutlook || 'Select a week to generate analysis...'}"
-          </p>
+          <div className="relative p-4 rounded-xl bg-white/[0.02] border border-white/5">
+            <p className="text-sm text-foreground/80 leading-relaxed font-medium italic">
+              "{weeklyAnalysis?.weeklyOutlook || 'Aggregating weekly economic data for analysis...'}"
+            </p>
+          </div>
         </CardContent>
       </Card>
 
       {/* Daily Analysis */}
-      <Card className="border-border bg-card/60 flex-1 overflow-hidden relative">
+      <Card className="border-border/40 bg-white/[0.02] flex-1 overflow-hidden relative flex flex-col shadow-2xl">
         {loadingDaily && (
-          <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
           </div>
         )}
-        <CardHeader className="pb-3 border-b border-border/50 bg-muted/20">
+        <CardHeader className="pb-4 border-b border-border/20 bg-muted/10">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              {selectedDate ? `Day Analysis (${selectedDate})` : 'Select a Day'}
-            </CardTitle>
+            <div>
+              <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
+                Daily Deep Dive
+              </CardTitle>
+              <p className="text-xs font-bold mt-1">{selectedDate || 'Select Session'}</p>
+            </div>
             {dailyAnalysis && (
-              <BiasIcon bias={dailyAnalysis.marketBias} />
+              <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
+                <BiasIcon bias={dailyAnalysis.marketBias} />
+              </div>
             )}
           </div>
         </CardHeader>
-        <CardContent className="pt-4 space-y-6">
+        <CardContent className="pt-6 space-y-8 flex-1 overflow-y-auto custom-scrollbar">
           {dailyAnalysis ? (
             <>
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold text-primary flex items-center gap-2 uppercase">
-                  <Sparkles className="w-3 h-3" />
-                  Key Factors
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black text-primary flex items-center gap-2 uppercase tracking-widest">
+                  <Target className="w-3 h-3" />
+                  Primary Market Drivers
                 </h4>
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                   {dailyAnalysis.keyFactors.map((factor, i) => (
-                    <li key={i} className="text-sm text-foreground/80 flex items-start gap-2">
-                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-secondary shrink-0" />
-                      {factor}
+                    <li key={i} className="text-xs text-foreground/70 flex items-start gap-3 bg-white/[0.01] p-2.5 rounded-lg border border-white/5 group hover:bg-white/[0.03] transition-colors">
+                      <span className="mt-1 h-1 w-1 rounded-full bg-primary shrink-0 group-hover:scale-150 transition-transform" />
+                      <span className="font-medium">{factor}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-primary uppercase">Summary</h4>
-                <p className="text-sm text-foreground/90 leading-relaxed">
+                <h4 className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
+                  <BarChart3 className="w-3 h-3" />
+                  Sentiment Summary
+                </h4>
+                <p className="text-xs text-foreground/80 leading-relaxed font-medium">
                   {dailyAnalysis.analysis}
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-muted/30 border border-border flex items-center justify-between">
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 flex items-center justify-between shadow-xl">
                 <div>
-                  <span className="text-xs font-bold text-muted-foreground uppercase block mb-1">Market Bias</span>
-                  <span className="text-lg font-bold tracking-tight">{dailyAnalysis.marketBias}</span>
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-1.5">Consensus Bias</span>
+                  <span className={`text-xl font-black tracking-tighter ${
+                    dailyAnalysis.marketBias === 'Bullish' ? 'text-emerald-400' :
+                    dailyAnalysis.marketBias === 'Bearish' ? 'text-red-400' :
+                    'text-white'
+                  }`}>
+                    {dailyAnalysis.marketBias.toUpperCase()}
+                  </span>
                 </div>
-                <div className={`p-3 rounded-lg ${
-                  dailyAnalysis.marketBias === 'Bullish' ? 'bg-emerald-500/10 text-emerald-400' :
-                  dailyAnalysis.marketBias === 'Bearish' ? 'bg-rose-500/10 text-rose-400' :
-                  'bg-slate-500/10 text-slate-400'
+                <div className={`p-4 rounded-2xl shadow-2xl ${
+                  dailyAnalysis.marketBias === 'Bullish' ? 'bg-emerald-500/10 border border-emerald-500/20' :
+                  dailyAnalysis.marketBias === 'Bearish' ? 'bg-red-500/10 border border-red-500/20' :
+                  'bg-white/5 border border-white/10'
                 }`}>
                   <BiasIcon bias={dailyAnalysis.marketBias} />
                 </div>
               </div>
             </>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-40">
-              <BrainCircuit className="w-12 h-12 mb-4" />
-              <p className="text-sm">Click on any day from the calendar to get a deep-dive AI analysis.</p>
+            <div className="h-full flex flex-col items-center justify-center text-center p-10 opacity-30">
+              <Sparkles className="w-12 h-12 mb-4 text-primary" />
+              <p className="text-xs font-bold uppercase tracking-widest leading-relaxed">
+                Select a session from the calendar to initiate AI institutional analysis
+              </p>
             </div>
           )}
         </CardContent>
