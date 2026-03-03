@@ -3,6 +3,7 @@
 /**
  * @fileOverview Institutional market data fetcher.
  * Strictly live connection, 0-dependency for VPS stability.
+ * Replaced date-fns with native Intl to prevent VPS build errors.
  */
 
 export type EconomicEvent = {
@@ -37,13 +38,15 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     });
 
     if (!response.ok) {
-      throw new Error(`Feed connection failed: ${response.status}`);
+      console.error(`Feed connection failed: ${response.status}`);
+      return {}; // Return empty instead of throwing to avoid 500 crash
     }
 
     const rawData = await response.json();
     
     if (!Array.isArray(rawData)) {
-      throw new Error("Invalid data format received from feed.");
+      console.error("Invalid data format received from feed.");
+      return {};
     }
 
     const weekly: Record<string, EconomicEvent[]> = {};
@@ -106,7 +109,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     return weekly;
   } catch (error: any) {
     console.error("CRITICAL SYNC ERROR:", error.message);
-    throw new Error(error.message);
+    return {}; // Graceful return to avoid server crash
   }
 }
 
