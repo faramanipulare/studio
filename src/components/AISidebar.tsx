@@ -25,6 +25,7 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
   const lastProcessedDate = useRef<string | null>(null);
   const lastWeeklyEventCount = useRef<number>(0);
 
+  // Strategic Weekly Outlook Flow
   useEffect(() => {
     const fetchWeekly = async () => {
       if (!weeklyEvents || weeklyEvents.length === 0 || weeklyEvents.length === lastWeeklyEventCount.current) return;
@@ -39,7 +40,7 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
         });
         setWeeklyAnalysis(result);
       } catch (error) {
-        console.error("Weekly Analysis Error:", error);
+        console.error("Macro Analysis Link Error:", error);
       } finally {
         setLoadingWeekly(false);
       }
@@ -47,12 +48,14 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
     fetchWeekly();
   }, [weeklyEvents]);
 
+  // Session-Specific Deep Dive Flow
   useEffect(() => {
     const fetchDaily = async () => {
       if (!selectedDayEvents || !selectedDate || selectedDate === lastProcessedDate.current) return;
       
       setLoadingDaily(true);
       lastProcessedDate.current = selectedDate;
+      setDailyAnalysis(null); // Clear previous for better UI feedback
       
       try {
         const result = await aiDailyMarketAnalysis({ 
@@ -69,7 +72,8 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
         });
         setDailyAnalysis(result);
       } catch (error) {
-        console.error("Daily Analysis Error:", error);
+        console.error("Session Analysis Link Error:", error);
+        lastProcessedDate.current = null; // Allow retry on next interaction
       } finally {
         setLoadingDaily(false);
       }
@@ -128,7 +132,7 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
             </div>
             <Progress value={weeklyAnalysis?.successProbability ?? 0} className="h-1 bg-white/5" />
           </div>
-          <div className="relative p-4 rounded-xl bg-white/[0.02] border border-white/5">
+          <div className="relative p-4 rounded-xl bg-white/[0.02] border border-white/5 min-h-[80px]">
             <p className="text-xs text-foreground/80 leading-relaxed font-bold italic">
               {weeklyAnalysis?.weeklyOutlook ? `"${weeklyAnalysis.weeklyOutlook}"` : 'Awaiting live exchange feed to generate macro analysis...'}
             </p>
