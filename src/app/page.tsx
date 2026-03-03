@@ -4,9 +4,9 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { NewsTicker } from '@/components/NewsTicker';
 import { AISidebar } from '@/components/AISidebar';
-import { getWeeklyEvents, type EconomicEvent } from '@/app/lib/mock-data';
+import { fetchWeeklyEvents, type EconomicEvent } from '@/app/lib/market-data';
 import { format, parseISO } from 'date-fns';
-import { Activity, ChevronRight, Layers, Zap, Loader2 } from 'lucide-react';
+import { Activity, ChevronRight, Layers, Zap, Loader2, RefreshCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -14,16 +14,21 @@ export default function Home() {
   const [weeklyData, setWeeklyData] = useState<Record<string, EconomicEvent[]>>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [impactFilter, setImpactFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All');
-  const [isMounted, setIsMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const data = getWeeklyEvents();
+  const loadData = async () => {
+    setLoading(true);
+    const data = await fetchWeeklyEvents();
     setWeeklyData(data);
     const firstDate = Object.keys(data)[0];
-    if (firstDate) {
+    if (firstDate && !selectedDate) {
       setSelectedDate(firstDate);
     }
-    setIsMounted(true);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   const selectedDayEvents = selectedDate ? weeklyData[selectedDate] : null;
@@ -48,13 +53,15 @@ export default function Home() {
     );
   };
 
-  // Prevent hydration mismatch by returning a loading state or consistent shell during SSR
-  if (!isMounted) {
+  if (loading && Object.keys(weeklyData).length === 0) {
     return (
       <div className="flex flex-col min-h-screen bg-[#050508] text-foreground font-body">
         <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <main className="flex-1 flex flex-col items-center justify-center gap-4">
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
+            Accessing Institutional Data Feed...
+          </p>
         </main>
       </div>
     );
@@ -65,33 +72,39 @@ export default function Home() {
       <Header />
       
       <main className="flex-1 flex overflow-hidden">
-        {/* Sidebar for AI Analysis */}
         <AISidebar 
           selectedDayEvents={selectedDayEvents} 
           selectedDate={selectedDate} 
           weeklyEvents={flatWeeklyEvents}
         />
 
-        {/* Content Area */}
         <div className="flex-1 flex flex-col p-6 gap-6 bg-[#08090d] overflow-y-auto pb-24">
-          
-          {/* Header Section */}
           <div className="flex items-end justify-between border-b border-border/40 pb-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.2em]">
                 <Activity className="w-3 h-3" />
-                Live Feed
+                Live Data Feed
               </div>
               <h2 className="text-2xl font-black tracking-tight flex items-center gap-3">
-                Global Economic Calendar
+                Institutional Calendar
                 <span className="text-muted-foreground/30 font-light text-xl">/</span>
                 <span className="text-muted-foreground text-sm font-medium tracking-normal">
-                  {selectedDate ? format(parseISO(selectedDate), 'MMMM d, yyyy') : ''}
+                  {selectedDate ? format(parseISO(selectedDate), 'MMMM d, yyyy') : 'Current Session'}
                 </span>
               </h2>
             </div>
 
             <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={loadData}
+                disabled={loading}
+                className="h-7 px-3 border-white/10 hover:bg-white/5"
+              >
+                <RefreshCcw className={`w-3 h-3 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                <span className="text-[9px] font-black uppercase">Refresh</span>
+              </Button>
               <div className="flex bg-muted/30 rounded-lg p-0.5 border border-border/50">
                 {['All', 'High', 'Medium', 'Low'].map((impact) => (
                   <Button
@@ -112,11 +125,11 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Week Selector */}
           <div className="grid grid-cols-5 gap-4">
-            {Object.keys(weeklyData).map((dateStr) => {
+            {Object.keys(weeklyData).sort().map((dateStr) => {
               const date = parseISO(dateStr);
               const isSelected = selectedDate === dateStr;
+              const dayEvents = weeklyData[dateStr];
               
               return (
                 <button
@@ -140,7 +153,7 @@ export default function Home() {
                     
                     <div className="mt-3 flex items-center gap-2">
                       <div className="flex -space-x-1">
-                        {weeklyData[dateStr].slice(0, 3).map((e, idx) => (
+                        {dayEvents.slice(0, 3).map((e, idx) => (
                           <div 
                             key={idx} 
                             className={`w-2 h-2 rounded-full border border-background ${
@@ -150,14 +163,13 @@ export default function Home() {
                         ))}
                       </div>
                       <span className="text-[9px] font-bold text-muted-foreground uppercase">
-                        {weeklyData[dateStr].length} Events
+                        {dayEvents.length} Points
                       </span>
                     </div>
                   </div>
-
                   {isSelected && (
-                    <div className="absolute top-0 right-0 p-2 opacity-20">
-                      <Zap className="w-12 h-12 text-primary" />
+                    <div className="absolute top-0 right-0 p-2 opacity-10">
+                      <Zap className="w-12 h-12 text-primary fill-primary" />
                     </div>
                   )}
                 </button>
@@ -165,7 +177,6 @@ export default function Home() {
             })}
           </div>
 
-          {/* Events List */}
           <div className="rounded-2xl border border-border/60 bg-[#0c0e14] overflow-hidden flex flex-col shadow-2xl">
             <div className="px-6 py-4 bg-muted/10 border-b border-border/40 flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -173,11 +184,11 @@ export default function Home() {
                   <Layers className="w-4 h-4 text-primary" />
                 </div>
                 <h4 className="text-xs font-black uppercase tracking-widest text-foreground/80">
-                  Institutional Schedule
+                  Market Schedule (GMT+2)
                 </h4>
               </div>
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-bold text-[10px]">
-                {filteredEvents.length} DATA POINTS
+                {filteredEvents.length} ACTIVE EVENTS
               </Badge>
             </div>
             
@@ -190,7 +201,7 @@ export default function Home() {
                   >
                     <div className="w-20 border-r border-border/30 mr-6">
                       <span className="text-sm font-mono font-black text-foreground tabular-nums">{event.time}</span>
-                      <p className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5 tracking-tighter">EST TIME</p>
+                      <p className="text-[9px] font-bold text-muted-foreground uppercase mt-0.5 tracking-tighter">TIME</p>
                     </div>
                     
                     <div className="w-14 mr-6">
@@ -231,16 +242,13 @@ export default function Home() {
                           {event.previous || '---'}
                         </span>
                       </div>
-                      <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-primary/20 transition-all text-muted-foreground hover:text-primary">
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
                     </div>
                   </div>
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center py-24 text-center">
                   <Activity className="w-12 h-12 mb-4 text-muted/30" />
-                  <p className="text-muted-foreground font-medium">No market events match current filters.</p>
+                  <p className="text-muted-foreground font-medium">No live events reported for this session.</p>
                 </div>
               )}
             </div>
