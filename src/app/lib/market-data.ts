@@ -1,4 +1,3 @@
-
 'use server';
 
 import { format } from 'date-fns';
@@ -50,7 +49,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
 
     rawData.forEach((item: any) => {
       try {
-        // Native UTC to Bucharest conversion
+        // Native UTC to Bucharest conversion using Intl to avoid date-fns-tz dependency issues on VPS
         const dateUtc = new Date(item.date);
         const bucharestDateStr = dateUtc.toLocaleString('en-US', { timeZone: 'Europe/Bucharest' });
         const zonedDate = new Date(bucharestDateStr);
@@ -101,8 +100,6 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     return weekly;
   } catch (error: any) {
     console.error("CRITICAL LIVE SYNC ERROR:", error.message);
-    // Instead of throwing and causing a 500, we return an empty object
-    // the UI will handle the error message.
     return {}; 
   }
 }

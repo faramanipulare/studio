@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -204,8 +203,8 @@ export const AISidebar: React.FC<AISidebarProps> = ({
         </CardContent>
       </Card>
       
-      {/* Bottom Spacer for Mobile Scroll */}
-      <div className="h-24 lg:hidden" />
+      {/* Bottom Spacer for Mobile Scroll to ensure News Ticker doesn't cover content */}
+      <div className="h-32 lg:hidden" />
     </div>
   );
 };

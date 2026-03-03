@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -20,6 +19,7 @@ export function Header() {
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     
+    // Audio stream for Pescobar FM
     audioRef.current = new Audio("https://listen.radioking.com/radio/701141/stream/766385");
     audioRef.current.volume = 0.5;
 
@@ -103,6 +103,7 @@ export function Header() {
 
   return (
     <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/80 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
+      {/* Hidden Google Translate container */}
       <div id="google_translate_element" className="hidden absolute opacity-0"></div>
 
       <div className="flex items-center gap-3 lg:gap-5">
@@ -126,6 +127,7 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3 lg:gap-8">
+        {/* Language Selectors */}
         <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
           <button 
             onClick={() => changeLanguage('ro')}
@@ -154,6 +156,7 @@ export function Header() {
           </button>
         </div>
 
+        {/* Pescobar FM Radio Button */}
         <button 
           onClick={toggleRadio}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${

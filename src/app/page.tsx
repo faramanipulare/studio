@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -48,6 +47,7 @@ export default function Home() {
       setLastSync(format(new Date(), 'HH:mm:ss'));
       
       const dates = Object.keys(data).sort();
+      // Target current market date
       const targetSession = '2026-03-03';
       
       if (!selectedDate) {
@@ -67,7 +67,7 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 120000);
+    const interval = setInterval(loadData, 120000); // 2 min auto-refresh
     return () => clearInterval(interval);
   }, []);
 
@@ -267,6 +267,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                {/* Desktop Table */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
@@ -304,6 +305,7 @@ export default function Home() {
                   </table>
                 </div>
 
+                {/* Mobile View */}
                 <div className="md:hidden divide-y divide-white/5">
                   {filteredEvents.map((event) => (
                     <div key={event.id} className="p-4 space-y-3">
