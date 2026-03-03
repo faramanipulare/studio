@@ -5,7 +5,7 @@ import { Header } from '@/components/Header';
 import { NewsTicker } from '@/components/NewsTicker';
 import { AISidebar } from '@/components/AISidebar';
 import { fetchWeeklyEvents, type EconomicEvent } from '@/app/lib/market-data';
-import { format, parseISO, isSameDay } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { Activity, Layers, Zap, Loader2, RefreshCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,20 +18,23 @@ export default function Home() {
 
   const loadData = async () => {
     setLoading(true);
-    const data = await fetchWeeklyEvents();
-    setWeeklyData(data);
-    
-    // Logic to select the current day or the first available day
-    const dates = Object.keys(data).sort();
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-    
-    if (dates.includes(todayStr)) {
-      setSelectedDate(todayStr);
-    } else if (dates.length > 0) {
-      setSelectedDate(dates[0]);
+    try {
+      const data = await fetchWeeklyEvents();
+      setWeeklyData(data);
+      
+      const dates = Object.keys(data).sort();
+      const todayStr = format(new Date(), 'yyyy-MM-dd');
+      
+      if (dates.includes(todayStr)) {
+        setSelectedDate(todayStr);
+      } else if (dates.length > 0) {
+        setSelectedDate(dates[0]);
+      }
+    } catch (err) {
+      console.error("Failed to sync live data:", err);
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -74,7 +77,7 @@ export default function Home() {
             <Loader2 className="w-12 h-12 text-primary animate-spin relative z-10" />
           </div>
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary animate-pulse">
-            Establishing Secure Link to Global Exchanges...
+            Connecting to Live Exchange Feeds...
           </p>
         </main>
       </div>
@@ -82,7 +85,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#050508] text-foreground font-body">
+    <div className="flex flex-col min-h-screen bg-[#050508] text-foreground font-body overflow-hidden">
       <Header />
       
       <main className="flex-1 flex overflow-hidden">
@@ -117,7 +120,7 @@ export default function Home() {
                 className="h-8 px-4 border-white/10 hover:bg-white/5 bg-transparent text-white"
               >
                 <RefreshCcw className={`w-3.5 h-3.5 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                <span className="text-[10px] font-black uppercase">Sync Data</span>
+                <span className="text-[10px] font-black uppercase">Sync Live Data</span>
               </Button>
               <div className="flex bg-muted/20 rounded-lg p-0.5 border border-white/5">
                 {['All', 'High', 'Medium', 'Low'].map((impact) => (
@@ -128,7 +131,7 @@ export default function Home() {
                     onClick={() => setImpactFilter(impact as any)}
                     className={`h-7 px-3 text-[9px] font-black uppercase rounded-md transition-all ${
                       impactFilter === impact 
-                        ? 'bg-primary text-white shadow-lg glow-primary' 
+                        ? 'bg-primary text-white shadow-lg' 
                         : 'text-muted-foreground hover:text-white hover:bg-white/5'
                     }`}
                   >
@@ -202,7 +205,7 @@ export default function Home() {
                 </h4>
               </div>
               <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black text-[9px]">
-                {filteredEvents.length} ACTIVE VOLATILITY POINTS
+                {filteredEvents.length} ACTIVE LIVE EVENTS
               </Badge>
             </div>
             
@@ -262,7 +265,7 @@ export default function Home() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-24 text-center opacity-30">
                   <Activity className="w-12 h-12 mb-4 text-primary animate-pulse" />
-                  <p className="text-[10px] font-black uppercase tracking-widest">No matching volatility events for this session.</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest">No live volatility events for this session.</p>
                 </div>
               )}
             </div>

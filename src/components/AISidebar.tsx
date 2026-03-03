@@ -22,25 +22,27 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
   const [loadingWeekly, setLoadingWeekly] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
   
-  const lastProcessedDate = useRef<string | null>(null);
-  const lastWeeklyEventCount = useRef<number>(0);
+  const lastProcessedDailyDate = useRef<string | null>(null);
+  const lastProcessedWeeklyCount = useRef<number>(0);
 
   // Strategic Weekly Outlook Flow
   useEffect(() => {
     const fetchWeekly = async () => {
-      if (!weeklyEvents || weeklyEvents.length === 0 || weeklyEvents.length === lastWeeklyEventCount.current) return;
+      // Only trigger if data exists and hasn't been analyzed for this set of events
+      if (!weeklyEvents || weeklyEvents.length === 0 || weeklyEvents.length === lastProcessedWeeklyCount.current) return;
       
       setLoadingWeekly(true);
-      lastWeeklyEventCount.current = weeklyEvents.length;
+      lastProcessedWeeklyCount.current = weeklyEvents.length;
       
       try {
-        const relevantEvents = weeklyEvents.filter(e => e.impact !== 'Low');
+        // Focus on high-impact events for the macro view
+        const relevantEvents = weeklyEvents.filter(e => e.impact === 'High' || e.impact === 'Medium');
         const result = await getWeeklyMarketOverview({ 
-          economicEvents: relevantEvents.length > 0 ? relevantEvents.slice(0, 20) : weeklyEvents.slice(0, 15) 
+          economicEvents: relevantEvents.length > 0 ? relevantEvents.slice(0, 25) : weeklyEvents.slice(0, 20) 
         });
         setWeeklyAnalysis(result);
       } catch (error) {
-        console.error("Macro Analysis Link Error:", error);
+        console.error("Weekly Analysis Error:", error);
       } finally {
         setLoadingWeekly(false);
       }
@@ -51,11 +53,11 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
   // Session-Specific Deep Dive Flow
   useEffect(() => {
     const fetchDaily = async () => {
-      if (!selectedDayEvents || !selectedDate || selectedDate === lastProcessedDate.current) return;
+      if (!selectedDayEvents || !selectedDate || selectedDate === lastProcessedDailyDate.current) return;
       
       setLoadingDaily(true);
-      lastProcessedDate.current = selectedDate;
-      setDailyAnalysis(null); // Clear previous for better UI feedback
+      lastProcessedDailyDate.current = selectedDate;
+      setDailyAnalysis(null);
       
       try {
         const result = await aiDailyMarketAnalysis({ 
@@ -64,7 +66,7 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
             time: e.time,
             currency: e.currency,
             event: e.event,
-            impact: e.impact as any,
+            impact: e.impact,
             actual: e.actual,
             forecast: e.forecast,
             previous: e.previous
@@ -72,8 +74,8 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
         });
         setDailyAnalysis(result);
       } catch (error) {
-        console.error("Session Analysis Link Error:", error);
-        lastProcessedDate.current = null; // Allow retry on next interaction
+        console.error("Daily Analysis Error:", error);
+        lastProcessedDailyDate.current = null;
       } finally {
         setLoadingDaily(false);
       }
@@ -92,7 +94,7 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
   };
 
   return (
-    <div className="w-[420px] flex flex-col gap-6 p-6 h-[calc(100vh-80px)] overflow-y-auto bg-[#0a0c12] border-r border-white/5 custom-scrollbar">
+    <div className="w-[420px] flex flex-col gap-6 p-6 h-[calc(100vh-80px)] overflow-y-auto bg-[#0a0c12] border-r border-white/5 scrollbar-hide">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
@@ -166,7 +168,7 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
             )}
           </div>
         </CardHeader>
-        <CardContent className="pt-6 space-y-8 flex-1 overflow-y-auto custom-scrollbar">
+        <CardContent className="pt-6 space-y-8 flex-1 overflow-y-auto custom-scrollbar pb-10">
           {dailyAnalysis ? (
             <>
               <div className="space-y-4">
