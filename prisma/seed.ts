@@ -17,7 +17,7 @@ async function main() {
   const assets = ["BTC/USD", "ETH/USD", "EUR/USD", "GBP/USD", "AAPL", "TSLA"];
   const types = ["Buy", "Sell"];
   const statuses = ["Open", "Closed"];
-  const sentiments = ["Bullish", "Bearish", "Neutral"];
+  const sentiments = ["Trade", "Avoid"];
 
   for (let i = 0; i < 10; i++) {
     const entry = parseFloat((Math.random() * (50000 - 100) + 100).toFixed(2));
@@ -34,7 +34,7 @@ async function main() {
         exit_price: status === "Closed" ? exit_p : null,
         status: status,
         pnl: pnl,
-        user_id: user.id,
+        userId: user.id,
         impact_percentage: parseFloat((Math.random() * 100).toFixed(2)),
         sentiment: sentiments[Math.floor(Math.random() * sentiments.length)],
       },

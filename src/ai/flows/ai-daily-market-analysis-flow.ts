@@ -34,7 +34,18 @@ const DailyAnalysisOutputSchema = z.object({
 export type DailyAnalysisOutput = z.infer<typeof DailyAnalysisOutputSchema>;
 
 export async function aiDailyMarketAnalysis(input: DailyAnalysisInput): Promise<DailyAnalysisOutput> {
-  return aiDailyMarketAnalysisFlow(input);
+  try {
+    return await aiDailyMarketAnalysisFlow(input);
+  } catch (error: any) {
+    if (error.message?.includes('429') || error.message?.includes('quota')) {
+      return {
+        analysis: "Daily analysis is currently unavailable due to API rate limits. Please try again later.",
+        keyFactors: ["API Rate Limit Exceeded"],
+        marketBias: "Neutral"
+      };
+    }
+    throw error;
+  }
 }
 
 const aiDailyMarketAnalysisPrompt = ai.definePrompt({

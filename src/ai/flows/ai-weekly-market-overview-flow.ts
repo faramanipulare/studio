@@ -42,14 +42,15 @@ export type WeeklyMarketOverviewOutput = z.infer<typeof WeeklyMarketOverviewOutp
 export async function getWeeklyMarketOverview(input: WeeklyMarketOverviewInput): Promise<WeeklyMarketOverviewOutput> {
   try {
     return await weeklyMarketOverviewFlow(input);
-  } catch (error) {
-    console.error("Error in getWeeklyMarketOverview:", error);
-    // Return a fallback response in case of quota issues or other AI errors
-    return {
-      weeklyOutlook: "Market overview is currently unavailable due to high demand. Please check again later.",
-      successProbability: 50,
-      eventsDetail: []
-    };
+  } catch (error: any) {
+    if (error.message?.includes('429') || error.message?.includes('quota')) {
+      return {
+        weeklyOutlook: "Weekly overview is currently unavailable due to API rate limits. Please try again later.",
+        successProbability: 50,
+        eventsDetail: []
+      };
+    }
+    throw error;
   }
 }
 
