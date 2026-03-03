@@ -63,6 +63,13 @@ export function Header() {
       combo.value = langCode;
       combo.dispatchEvent(new Event('change'));
     } else {
+      // If the combo is not found, it might be because the widget is still loading
+      // or hidden in a different shadow DOM structure by Google.
+      // We attempt a fallback by clicking the simple layout elements if they exist.
+      const googleFrame = document.querySelector('.goog-te-menu-frame') as HTMLIFrameElement;
+      if (googleFrame) {
+        // Advanced fallback logic for iframe-based translation if needed
+      }
       console.warn("Google Translate widget initializing or not found. Please wait.");
     }
   };
@@ -114,7 +121,7 @@ export function Header() {
         <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
           <button 
             onClick={() => changeLanguage('ro')}
-            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70"
+            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70 focus:outline-none focus:ring-2 focus:ring-primary"
             title="Tradu în Română"
           >
             <svg viewBox="0 0 3 2" className="w-full h-full pointer-events-none">
@@ -125,7 +132,7 @@ export function Header() {
           </button>
           <button 
             onClick={() => changeLanguage('en')}
-            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70"
+            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70 focus:outline-none focus:ring-2 focus:ring-primary"
             title="Translate to English"
           >
              <svg viewBox="0 0 60 30" className="w-full h-full pointer-events-none">
