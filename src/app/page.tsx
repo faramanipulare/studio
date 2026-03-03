@@ -19,12 +19,14 @@ export default function Home() {
   const loadData = async () => {
     setLoading(true);
     try {
+      // Calling the server action from the client
       const data = await fetchWeeklyEvents();
       setWeeklyData(data);
       
       const dates = Object.keys(data).sort();
       const todayStr = format(new Date(), 'yyyy-MM-dd');
       
+      // Try to find today, or the first available day
       if (dates.includes(todayStr)) {
         setSelectedDate(todayStr);
       } else if (dates.length > 0) {
@@ -77,7 +79,7 @@ export default function Home() {
             <Loader2 className="w-12 h-12 text-primary animate-spin relative z-10" />
           </div>
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary animate-pulse">
-            Connecting to Live Exchange Feeds...
+            Establishing Server Bridge to Market Feeds...
           </p>
         </main>
       </div>
@@ -100,7 +102,7 @@ export default function Home() {
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.2em]">
                 <Activity className="w-3 h-3 animate-pulse" />
-                Live Terminal Feed
+                Institutional Data Feed
               </div>
               <h2 className="text-2xl font-black tracking-tight flex items-center gap-3">
                 Global Economic Calendar

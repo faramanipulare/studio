@@ -1,4 +1,6 @@
-import { format, parseISO, startOfWeek, addDays, isSameDay } from 'date-fns';
+'use server';
+
+import { format, parseISO } from 'date-fns';
 
 export type EconomicEvent = {
   id: string;
@@ -14,15 +16,15 @@ export type EconomicEvent = {
 
 /**
  * Fetches real-time economic calendar data from the ForexFactory (Faireconomy) feed.
- * This is a highly reliable live source used by institutional traders.
+ * This runs on the server to bypass CORS restrictions.
  */
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   try {
-    // This feed is live and updated continuously throughout the trading week
     const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', {
-      cache: 'no-store',
+      next: { revalidate: 300 }, // Cache for 5 minutes
       headers: {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
       }
     });
 
@@ -32,7 +34,6 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     const weekly: Record<string, EconomicEvent[]> = {};
 
     rawData.forEach((item: any) => {
-      // Parse the ISO date string from the feed (e.g., "2024-03-20T14:30:00-04:00")
       const dateObj = parseISO(item.date);
       const dayKey = format(dateObj, 'yyyy-MM-dd');
       const timeStr = format(dateObj, 'HH:mm');
@@ -52,16 +53,13 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       });
     });
 
-    // Ensure events are sorted by time for each day
     Object.keys(weekly).forEach(day => {
       weekly[day].sort((a, b) => a.time.localeCompare(b.time));
     });
 
     return weekly;
   } catch (error) {
-    console.error("Critical: Live data feed unreachable.", error);
-    // If the primary feed is down, we return an empty object to let the UI handle the 'No Data' state
-    // instead of showing fake data.
+    console.error("Critical: Live data feed unreachable server-side.", error);
     return {};
   }
 }
