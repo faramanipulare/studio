@@ -27,7 +27,7 @@ import {
 export default function Home() {
   const [weeklyData, setWeeklyData] = useState<Record<string, EconomicEvent[]>>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [impactFilter, setImpactFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All');
+  const [impactFilter, setImpactFilter] = useState<'All' | 'High'>('All');
   const [loading, setLoading] = useState(true);
 
   const loadData = async () => {
@@ -102,7 +102,7 @@ export default function Home() {
             <Loader2 className="w-12 h-12 text-primary animate-spin relative z-10" />
           </div>
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary animate-pulse px-4 text-center">
-            Synchronizing Global Session Feeds...
+            Synchronizing Institutional Session Feeds...
           </p>
         </main>
       </div>
@@ -118,15 +118,15 @@ export default function Home() {
         <div className="lg:hidden flex justify-between items-center p-3 bg-[#161419] border-b border-white/5 sticky top-16 z-30 backdrop-blur-md">
           <div className="flex items-center gap-2">
             <BrainCircuit className="w-4 h-4 text-primary" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-white">Market Intelligence</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-white">Institutional Intel</span>
           </div>
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm" className="h-7 text-[9px] font-black uppercase bg-primary/10 border-primary/20 text-primary px-3">
-                Review Bias
+                Review Session Bias
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[85vh] bg-[#0a0c12] border-white/5 p-0 overflow-y-auto rounded-t-3xl">
+            <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 overflow-y-auto rounded-t-3xl">
               <AISidebar 
                 selectedDayEvents={selectedDayEvents} 
                 selectedDate={selectedDate} 
@@ -151,7 +151,7 @@ export default function Home() {
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-primary font-bold text-[9px] lg:text-[10px] uppercase tracking-[0.2em]">
                 <Activity className="w-3 h-3 animate-pulse" />
-                Live Institutional Feed
+                Live Liquidty Feed
               </div>
               <h2 className="text-lg lg:text-2xl font-black tracking-tight text-white flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                 Economic Calendar
@@ -246,8 +246,8 @@ export default function Home() {
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">GMT+2</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Pair</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Event</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Impact</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Bias</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Impact %</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Sentiment</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Actual</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Forecast</th>
                   </tr>

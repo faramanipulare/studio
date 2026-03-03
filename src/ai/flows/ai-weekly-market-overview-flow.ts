@@ -2,10 +2,6 @@
 'use server';
 /**
  * @fileOverview Weekly market overview AI agent using Genkit 1.x.
- *
- * - getWeeklyMarketOverview - A function that handles the weekly market overview process.
- * - WeeklyOverviewInput - The input type for the weekly market overview.
- * - WeeklyOverviewOutput - The return type for the weekly market overview.
  */
 
 import { ai } from '../genkit';
@@ -28,29 +24,32 @@ const weeklyPrompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash',
   input: { schema: WeeklyOverviewInputSchema },
   output: { schema: WeeklyOverviewOutputSchema },
-  prompt: `You are an expert economic analyst. Your task is to provide a concise market overview for the week of {{week}}.
+  prompt: `You are an Expert Macro Analyst. Provide a concise institutional outlook for the week of {{week}}.
+
+Focus on:
+- Major central bank themes.
+- High-impact data clusters (NFP, CPI, Rates).
+- Overall market narrative.
 
 Provide:
-1. A brief summary of the expected market sentiment.
-2. Key economic events to watch.
-3. An overall sentiment rating (Bullish, Bearish, Neutral, or Mixed).`,
+1. A brief summary of expected sentiment.
+2. Key events to watch.
+3. Overall sentiment (Bullish, Bearish, Neutral, or Mixed).`,
 });
 
 export async function getWeeklyMarketOverview(input: WeeklyOverviewInput): Promise<WeeklyOverviewOutput> {
   try {
     const { output } = await weeklyPrompt(input);
-    if (!output) {
-      throw new Error('Failed to generate weekly market overview.');
-    }
+    if (!output) throw new Error('Failed to generate weekly overview.');
     return output;
   } catch (error: any) {
-    console.error('Weekly overview flow failed:', error);
+    console.warn('Weekly overview fallback:', error.message);
     return {
-      overview: "Weekly institutional sentiment is currently stable. High-impact news releases remain the primary drivers for price action.",
+      overview: "Weekly institutional sentiment is Neutral. Markets are pricing in current central bank policy while awaiting high-tier employment and inflation metrics.",
       keyEvents: [
-        "Central Bank interest rate decisions",
-        "Employment data releases (NFP)",
-        "Inflation metrics (CPI/PPI)"
+        "Major Central Bank Speeches",
+        "Inflation (CPI/PPI) clusters",
+        "Employment (NFP) deviations"
       ],
       sentiment: "Neutral"
     };

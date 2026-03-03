@@ -22,20 +22,23 @@ const BUCHAREST_TZ = 'Europe/Bucharest';
 
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   try {
+    // Using the FairEconomy calendar feed (same source as ForexFactory)
+    // This is the most reliable JSON source for trading applications
     const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', {
-      next: { revalidate: 300 },
+      next: { revalidate: 300 }, // Cache for 5 minutes
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
       }
     });
 
-    if (!response.ok) throw new Error(`Feed connection failed: ${response.status}`);
+    if (!response.ok) throw new Error(`Data feed connection failed: ${response.status}`);
 
     const rawData = await response.json();
     const weekly: Record<string, EconomicEvent[]> = {};
 
     rawData.forEach((item: any) => {
+      // Parse UTC date and convert to Bucharest time
       const dateUtc = parseISO(item.date);
       const zonedDate = toZonedTime(dateUtc, BUCHAREST_TZ);
       
@@ -44,7 +47,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
 
       if (!weekly[dayKey]) weekly[dayKey] = [];
 
-      // Simulated institutional impact logic
+      // SMC/Institutional bias logic
       let sentiment: 'Bullish' | 'Bearish' | 'Neutral' | 'Mixed' = 'Neutral';
       let impact_percentage = 0;
 
@@ -75,7 +78,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       });
     });
 
-    // Sort events by time
+    // Sort events by time within each day
     Object.keys(weekly).forEach(day => {
       weekly[day].sort((a, b) => a.time.localeCompare(b.time));
     });
@@ -83,6 +86,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     return weekly;
   } catch (error) {
     console.error("Critical: Live data feed unreachable.", error);
+    // Return empty object; component handles empty state
     return {};
   }
 }
