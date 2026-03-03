@@ -23,7 +23,6 @@ const BUCHAREST_TZ = 'Europe/Bucharest';
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   try {
     // Using the FairEconomy calendar feed (same source as ForexFactory)
-    // This is the most reliable JSON source for trading applications
     const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', {
       next: { revalidate: 300 }, // Cache for 5 minutes
       headers: {
@@ -47,7 +46,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
 
       if (!weekly[dayKey]) weekly[dayKey] = [];
 
-      // SMC/Institutional bias logic
+      // SMC/Institutional bias logic simulation
       let sentiment: 'Bullish' | 'Bearish' | 'Neutral' | 'Mixed' = 'Neutral';
       let impact_percentage = 0;
 
@@ -78,7 +77,6 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       });
     });
 
-    // Sort events by time within each day
     Object.keys(weekly).forEach(day => {
       weekly[day].sort((a, b) => a.time.localeCompare(b.time));
     });
@@ -86,7 +84,6 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     return weekly;
   } catch (error) {
     console.error("Critical: Live data feed unreachable.", error);
-    // Return empty object; component handles empty state
     return {};
   }
 }
