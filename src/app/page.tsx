@@ -1,4 +1,5 @@
-"use client";
+
+'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { Header } from '@/components/Header';
@@ -6,9 +7,25 @@ import { NewsTicker } from '@/components/NewsTicker';
 import { AISidebar } from '@/components/AISidebar';
 import { fetchWeeklyEvents, type EconomicEvent } from '@/app/lib/market-data';
 import { format, parseISO } from 'date-fns';
-import { Activity, Layers, Zap, Loader2, RefreshCcw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { 
+  Activity, 
+  Loader2, 
+  RefreshCcw, 
+  TrendingUp, 
+  TrendingDown, 
+  Minus, 
+  Info,
+  ChevronRight,
+  ChevronDown
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function Home() {
   const [weeklyData, setWeeklyData] = useState<Record<string, EconomicEvent[]>>({});
@@ -57,23 +74,22 @@ export default function Home() {
     return events;
   }, [selectedDayEvents, impactFilter]);
 
-  const ImpactBadge = ({ impact }: { impact: string }) => {
-    const styles = {
-      High: 'bg-red-500/10 text-red-400 border-red-500/20',
-      Medium: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-      Low: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-      Holiday: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-    };
-    return (
-      <Badge variant="outline" className={`${styles[impact as keyof typeof styles] || ''} px-1.5 py-0 h-4 text-[9px] font-black uppercase tracking-tighter`}>
-        {impact}
-      </Badge>
-    );
+  const getDaySummary = (events: EconomicEvent[]) => {
+    if (!events.length) return { avgImpact: 0, mainSentiment: 'Neutral' };
+    const avgImpact = Math.round(events.reduce((acc, curr) => acc + (curr.impact_percentage || 0), 0) / events.length);
+    const sentiments = events.map(e => e.sentiment).filter(Boolean);
+    const counts = sentiments.reduce((acc: any, curr: any) => {
+      acc[curr] = (acc[curr] || 0) + 1;
+      return acc;
+    }, {});
+    const mainSentiment = Object.keys(counts).reduce((a, b) => (counts[a] || 0) > (counts[b] || 0) ? a : b, 'Neutral');
+    return { avgImpact, mainSentiment };
   };
 
   const SentimentIndicator = ({ sentiment }: { sentiment?: string }) => {
     if (sentiment === 'Bullish') return <TrendingUp className="w-4 h-4 text-emerald-400" title="Bullish" />;
     if (sentiment === 'Bearish') return <TrendingDown className="w-4 h-4 text-rose-400" title="Bearish" />;
+    if (sentiment === 'Mixed') return <Activity className="w-4 h-4 text-orange-400" title="Mixed" />;
     return <Minus className="w-4 h-4 text-slate-500" title="Neutral" />;
   };
 
@@ -157,6 +173,7 @@ export default function Home() {
               const date = parseISO(dateStr);
               const isSelected = selectedDate === dateStr;
               const dayEvents = weeklyData[dateStr];
+              const { avgImpact, mainSentiment } = getDaySummary(dayEvents);
               
               return (
                 <button
@@ -178,25 +195,31 @@ export default function Home() {
                       {format(date, 'MMM dd')}
                     </span>
                     
-                    <div className="mt-3 flex items-center gap-2">
-                      <div className="flex -space-x-1">
-                        {dayEvents.slice(0, 3).map((e, idx) => (
-                          <div 
-                            key={idx} 
-                            className={`w-2 h-2 rounded-full border border-[#050508] ${
-                              e.impact === 'High' ? 'bg-red-500' : e.impact === 'Medium' ? 'bg-orange-500' : 'bg-blue-500'
-                            }`}
-                          />
-                        ))}
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="flex -space-x-1">
+                          {dayEvents.slice(0, 3).map((e, idx) => (
+                            <div 
+                              key={idx} 
+                              className={`w-2 h-2 rounded-full border border-[#050508] ${
+                                e.impact === 'High' ? 'bg-red-500' : e.impact === 'Medium' ? 'bg-orange-500' : 'bg-blue-500'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[9px] font-black text-white/40 uppercase">
+                          {dayEvents.length} Events
+                        </span>
                       </div>
-                      <span className="text-[9px] font-black text-white/40 uppercase">
-                        {dayEvents.length} Events
-                      </span>
+                      <div className="flex items-center gap-2 bg-black/30 px-2 py-1 rounded-md">
+                        <span className="text-[10px] font-bold text-primary">{avgImpact}%</span>
+                        <SentimentIndicator sentiment={mainSentiment} />
+                      </div>
                     </div>
                   </div>
                   {isSelected && (
                     <div className="absolute top-0 right-0 p-2 opacity-10">
-                      <Zap className="w-12 h-12 text-primary fill-primary" />
+                      <div className="w-12 h-12 text-primary" />
                     </div>
                   )}
                 </button>
@@ -204,61 +227,55 @@ export default function Home() {
             })}
           </div>
 
-          <div className="rounded-2xl border border-white/5 bg-[#0c0e14] overflow-hidden flex flex-col shadow-2xl">
-            <div className="px-6 py-4 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
-                  <Layers className="w-4 h-4 text-primary" />
-                </div>
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-white/70">
-                  Institutional Schedule (GMT+2)
-                </h4>
-              </div>
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black text-[9px]">
-                {filteredEvents.length} ACTIVE LIVE EVENTS
-              </Badge>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-white/5">
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Time</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Currency</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Event</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Impact</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Sentiment</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Weight</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Actual</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Forecast</th>
-                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Previous</th>
+          <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/5 bg-white/[0.02]">
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Time</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Currency</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40">Event</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Impact %</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-center">Sentiment</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Actual</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Forecast</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/40 text-right">Previous</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/[0.03]">
+                {filteredEvents.map((event) => (
+                  <tr key={event.id} className="hover:bg-white/5 transition-colors group">
+                    <td className="px-6 py-4 font-mono text-xs text-white/80">{event.time}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-4 bg-white/5 rounded-sm flex items-center justify-center text-[10px] font-bold text-white/60">
+                          {event.currency.substring(0, 2)}
+                        </span>
+                        <span className="font-bold text-xs text-white">{event.currency}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 font-bold text-xs text-white">{event.event}</td>
+                    <td className="px-6 py-4 text-center">
+                       <span className="text-xs font-mono text-white/60">{event.impact_percentage}%</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center">
+                        <SentimentIndicator sentiment={event.sentiment} />
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right font-mono text-xs text-emerald-400 font-bold">{event.actual || '-'}</td>
+                    <td className="px-6 py-4 text-right font-mono text-xs text-white/40">{event.forecast || '-'}</td>
+                    <td className="px-6 py-4 text-right font-mono text-xs text-white/20">{event.previous || '-'}</td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-white/[0.03]">
-                  {filteredEvents.map((event) => (
-                    <tr key={event.id} className="hover:bg-white/5 transition-colors">
-                      <td className="px-6 py-4 font-mono text-xs text-white/80">{event.time}</td>
-                      <td className="px-6 py-4 font-bold text-xs">{event.currency}</td>
-                      <td className="px-6 py-4 font-bold text-xs text-white">{event.event}</td>
-                      <td className="px-6 py-4 text-center">
-                        <ImpactBadge impact={event.impact} />
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <div className="flex justify-center">
-                          <SentimentIndicator sentiment={event.sentiment} />
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center font-mono text-xs text-white/60">
-                        {event.impact_percentage}%
-                      </td>
-                      <td className="px-6 py-4 text-right font-mono text-xs text-emerald-400 font-bold">{event.actual || '-'}</td>
-                      <td className="px-6 py-4 text-right font-mono text-xs text-white/40">{event.forecast || '-'}</td>
-                      <td className="px-6 py-4 text-right font-mono text-xs text-white/20">{event.previous || '-'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+                {filteredEvents.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-12 text-center text-white/40 text-xs italic font-medium">
+                      NO HIGH IMPACT DATA DETECTED FOR THIS SESSION
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </main>

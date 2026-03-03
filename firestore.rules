@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * FIREBASE SECURITY RULES DOCUMENTATION
+     *
+     * Core Philosophy:
+     * This ruleset implements a "Public Read, System Write" model. The application serves
+     * AI-generated market analysis which is intended for public consumption. To maintain
+     * high performance and simplicity (Authorization Independence), data is structured
+     * to allow open reading without complex permission lookups or joins.
+     *
+     * Data Structure:
+     * - /weeklyMarketOverviews: Top-level collection for weekly outlooks.
+     * - /weeklyMarketOverviews/{id}/dailyMarketAnalyses: Subcollection containing granular
+     *   daily breakdowns linked to their parent weekly overview.
+     *
+     * Key Security Decisions:
+     * 1. Public Accessibility: Market analyses are readable by any user (authenticated or
+     *    unauthenticated) to facilitate broad access to AI insights.
+     * 2. Write Protection: Since content is AI-generated, write operations are strictly
+     *    controlled. Because the current schema lacks a specific 'authorId' or 'adminId'
+     *    field for individual documents, writes are currently locked to prevent
+     *    unauthorized modification until an administrative role or ownership system is
+     *    defined.
+     * 3. Relational Integrity: Subcollection documents are forced to maintain a field
+     *    linking them to their parent document ID to ensure data consistency.
+     *
+     * Denormalization for Authorization:
+     * The `dailyMarketAnalyses` subcollection includes a `weeklyOverviewId` field. This
+     * allows for query-based validation and ensures that data retrieved from a specific
+     * path is internally consistent with its parent reference without requiring a `get()` call.
+     */
+
+    // --- Global Helper Functions ---
+
+    /**
+     * @description Validates that the document exists before allowing an operation.
+     * @param {object} req The request object.
+     */
+    function exists(req) {
+      return req.resource != null;
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for weekly market overviews. Publicly readable, restricted writes.
+     * @path /weeklyMarketOverviews/{weeklyOverviewId}
+     * @allow (get, list) Any user, including unauthenticated guests.
+     * @deny (create, update, delete) Any user, as no ownership field is defined in the schema.
+     * @principle Public Read with Owner-Only Writes (Pending Schema Update).
+     */
+    match /weeklyMarketOverviews/{weeklyOverviewId} {
+      allow get, list: if true;
+      
+      // CRITICAL: Cannot implement owner-only writes. The 'WeeklyMarketOverview' entity is missing an 'ownerId' or 'authorId' field.
+      allow create, update, delete: if false; // TODO: Add admin/owner validation once the schema is updated with an ownership field.
+      
+      /**
+       * @description Rules for daily market analyses nested under weekly overviews.
+       * @path /weeklyMarketOverviews/{weeklyOverviewId}/dailyMarketAnalyses/{dailyAnalysisId}
+       * @allow (get, list) Any user.
+       * @deny (create) If the internal weeklyOverviewId does not match the parent path ID.
+       * @principle Relational integrity and path consistency.
+       */
+      match /dailyMarketAnalyses/{dailyAnalysisId} {
+        allow get, list: if true;
+        
+        allow create: if isPathConsistent(weeklyOverviewId);
+        allow update: if exists(request) && isImmutable(resource.data.weeklyOverviewId);
+        allow delete: if exists(request) && false; // TODO: Define admin deletion logic.
+      }
+    }
+
+    // --- Validation Helpers ---
+
+    /** 
+     * @description Ensures the daily analysis document points to the correct parent weekly overview.
+     * Only checks fields critical for relational integrity.
+     */
+    function isPathConsistent(weeklyId) {
+      return request.resource.data.weeklyOverviewId == weeklyId;
+    }
+
+    /** 
+     * @description Ensures that a critical relational field cannot be changed after creation.
+     */
+    function isImmutable(val) {
+      return request.resource.data.weeklyOverviewId == val;
+    }
+
+  }
+}

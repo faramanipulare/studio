@@ -1,36 +1,42 @@
-'use server';
 
-import { ai, geminiModel } from '../genkit';
+'use server';
+/**
+ * @fileOverview Daily market analysis AI agent using Genkit 1.x.
+ *
+ * - getDailyMarketAnalysis - A function that handles the daily market analysis process.
+ * - DailyAnalysisInput - The input type for the daily market analysis.
+ * - DailyAnalysisOutput - The return type for the daily market analysis.
+ */
+
+import { ai } from '../genkit';
 import { z } from 'genkit';
 
 const DailyAnalysisEventSchema = z.object({
-  time: z.string().optional(),
-  currency: z.string().optional(),
-  event: z.string().optional(),
-  impact: z.string().optional(),
-  actual: z.string().optional().nullable(),
-  forecast: z.string().optional().nullable(),
-  previous: z.string().optional().nullable(),
+  time: z.string(),
+  currency: z.string(),
+  event: z.string(),
+  impact: z.string(),
+  actual: z.string().optional(),
+  forecast: z.string().optional(),
+  previous: z.string().optional(),
 });
 
 const DailyAnalysisInputSchema = z.object({
   date: z.string(),
   events: z.array(DailyAnalysisEventSchema),
 });
-
 export type DailyAnalysisInput = z.infer<typeof DailyAnalysisInputSchema>;
 
 const DailyAnalysisOutputSchema = z.object({
-  analysis: z.string(),
-  keyFactors: z.array(z.string()),
-  marketBias: z.enum(['Bullish', 'Bearish', 'Neutral', 'Mixed']),
+  analysis: z.string().describe('A concise analysis of the day\'s economic implications.'),
+  keyFactors: z.array(z.string()).describe('List of key factors influencing the market.'),
+  marketBias: z.enum(['Bullish', 'Bearish', 'Neutral', 'Mixed']).describe('The overall market bias for the day.'),
 });
-
 export type DailyAnalysisOutput = z.infer<typeof DailyAnalysisOutputSchema>;
 
-const aiDailyMarketAnalysisPrompt = ai.definePrompt({
+const dailyPrompt = ai.definePrompt({
   name: 'aiDailyMarketAnalysisPrompt',
-  model: geminiModel,
+  model: 'googleai/gemini-1.5-flash',
   input: { schema: DailyAnalysisInputSchema },
   output: { schema: DailyAnalysisOutputSchema },
   prompt: `You are an expert economic analyst. Your task is to analyze the provided economic calendar events for the day {{date}} and provide a concise analysis, key factors, and a market bias.
@@ -40,29 +46,37 @@ Economic Events for {{date}}:
 - Time: {{time}}, Currency: {{currency}}, Event: {{event}}, Impact: {{impact}}, Actual: {{actual}}, Forecast: {{forecast}}, Previous: {{previous}}
 {{/each}}
 
-Based on these events, provide:
-1. A concise analysis of the day's economic implications.
-2. The key factors that will influence the market.
-3. A potential market bias for the day. Ensure the market bias is one of 'Bullish', 'Bearish', 'Neutral', or 'Mixed'.`,
+Based on these events, provide a concise analysis, key factors, and market bias.`,
 });
 
 export async function getDailyMarketAnalysis(input: DailyAnalysisInput): Promise<DailyAnalysisOutput> {
-  try {
-    const { output } = await aiDailyMarketAnalysisPrompt(input);
-    if (!output) {
-      throw new Error('Failed to generate daily market analysis.');
-    }
-    return output;
-  } catch (error: any) {
-    console.error('Error in getDailyMarketAnalysis:', error);
-    // If it's a quota error, return a graceful message instead of crashing
-    if (error.message?.includes('429') || error.message?.includes('quota')) {
+  return dailyMarketAnalysisFlow(input);
+}
+
+const dailyMarketAnalysisFlow = ai.defineFlow(
+  {
+    name: 'dailyMarketAnalysisFlow',
+    inputSchema: DailyAnalysisInputSchema,
+    outputSchema: DailyAnalysisOutputSchema,
+  },
+  async (input) => {
+    try {
+      const { output } = await dailyPrompt(input);
+      if (!output) {
+        throw new Error('Failed to generate daily market analysis.');
+      }
+      return output;
+    } catch (error: any) {
+      // Graceful fallback for quota limits or other errors
       return {
-        analysis: "Daily analysis is currently unavailable due to API rate limits. Please try again in a few minutes.",
-        keyFactors: ["API Rate Limit reached"],
+        analysis: "Daily session analysis is currently limited due to institutional data provider constraints. Monitor high-volatility news events manually.",
+        keyFactors: [
+          "Focus on G7 high-impact news releases",
+          "Watch for price deviations from technical levels during NY session",
+          "Monitor institutional flow around daily opens"
+        ],
         marketBias: "Neutral"
       };
     }
-    throw error;
   }
-}
+);

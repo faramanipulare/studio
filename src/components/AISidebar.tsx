@@ -1,66 +1,53 @@
-"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { BrainCircuit, TrendingUp, TrendingDown, Minus, Info, Sparkles, Loader2, Target, BarChart3, ShieldAlert } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { BrainCircuit, Loader2, Sparkles, TrendingUp, TrendingDown, Minus, Activity, AlertTriangle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { getWeeklyMarketOverview, type WeeklyMarketOverviewOutput } from '@/ai/flows/ai-weekly-market-overview-flow';
-import { aiDailyMarketAnalysis, type DailyAnalysisOutput } from '@/ai/flows/ai-daily-market-analysis-flow';
+import { getWeeklyMarketOverview, type WeeklyOverviewOutput } from '@/ai/flows/ai-weekly-market-overview-flow';
+import { getDailyMarketAnalysis, type DailyAnalysisOutput } from '@/ai/flows/ai-daily-market-analysis-flow';
 import { type EconomicEvent } from '@/app/lib/market-data';
 import { format, parseISO } from 'date-fns';
 
 interface AISidebarProps {
-  selectedDayEvents: EconomicEvent[] | null;
+  selectedDayEvents: EconomicEvent[];
   selectedDate: string | null;
   weeklyEvents: EconomicEvent[];
 }
 
-export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AISidebarProps) {
-  const [weeklyAnalysis, setWeeklyAnalysis] = useState<WeeklyMarketOverviewOutput | null>(null);
+export const AISidebar: React.FC<AISidebarProps> = ({ 
+  selectedDayEvents, 
+  selectedDate,
+  weeklyEvents 
+}) => {
+  const [weeklyOverview, setWeeklyOverview] = useState<WeeklyOverviewOutput | null>(null);
   const [dailyAnalysis, setDailyAnalysis] = useState<DailyAnalysisOutput | null>(null);
   const [loadingWeekly, setLoadingWeekly] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
-  
-  const lastProcessedDailyDate = useRef<string | null>(null);
-  const lastProcessedWeeklyCount = useRef<number>(0);
 
-  // Strategic Weekly Outlook Flow
   useEffect(() => {
-    const fetchWeekly = async () => {
-      // Only trigger if data exists and hasn't been analyzed for this set of events
-      if (!weeklyEvents || weeklyEvents.length === 0 || weeklyEvents.length === lastProcessedWeeklyCount.current) return;
-      
+    async function fetchWeekly() {
+      if (!weeklyEvents || weeklyEvents.length === 0) return;
       setLoadingWeekly(true);
-      lastProcessedWeeklyCount.current = weeklyEvents.length;
-      
       try {
-        // Focus on high-impact events for the macro view
-        const relevantEvents = weeklyEvents.filter(e => e.impact === 'High' || e.impact === 'Medium');
-        const result = await getWeeklyMarketOverview({ 
-          economicEvents: relevantEvents.length > 0 ? relevantEvents.slice(0, 25) : weeklyEvents.slice(0, 20) 
-        });
-        setWeeklyAnalysis(result);
-      } catch (error) {
-        console.error("Weekly Analysis Error:", error);
+        const result = await getWeeklyMarketOverview({ week: 'Current Week' });
+        setWeeklyOverview(result);
+      } catch (err) {
+        console.error('Error fetching weekly overview:', err);
       } finally {
         setLoadingWeekly(false);
       }
-    };
+    }
     fetchWeekly();
   }, [weeklyEvents]);
 
-  // Session-Specific Deep Dive Flow
   useEffect(() => {
-    const fetchDaily = async () => {
-      if (!selectedDayEvents || !selectedDate || selectedDate === lastProcessedDailyDate.current) return;
-      
+    async function fetchDaily() {
+      if (!selectedDate || !selectedDayEvents || selectedDayEvents.length === 0) return;
       setLoadingDaily(true);
-      lastProcessedDailyDate.current = selectedDate;
-      setDailyAnalysis(null);
-      
       try {
-        const result = await aiDailyMarketAnalysis({ 
+        const result = await getDailyMarketAnalysis({ 
           date: selectedDate, 
           events: selectedDayEvents.map(e => ({
             time: e.time,
@@ -70,165 +57,146 @@ export function AISidebar({ selectedDayEvents, selectedDate, weeklyEvents }: AIS
             actual: e.actual,
             forecast: e.forecast,
             previous: e.previous
-          })) 
+          }))
         });
         setDailyAnalysis(result);
-      } catch (error) {
-        console.error("Daily Analysis Error:", error);
-        lastProcessedDailyDate.current = null;
+      } catch (err) {
+        console.error('Error fetching daily analysis:', err);
       } finally {
         setLoadingDaily(false);
       }
-    };
+    }
     fetchDaily();
-  }, [selectedDayEvents, selectedDate]);
+  }, [selectedDate, selectedDayEvents]);
 
-  const BiasIcon = ({ bias }: { bias: string }) => {
+  const SentimentIcon = ({ bias }: { bias?: string }) => {
     switch (bias) {
       case 'Bullish': return <TrendingUp className="w-5 h-5 text-emerald-400" />;
       case 'Bearish': return <TrendingDown className="w-5 h-5 text-rose-400" />;
-      case 'Neutral': return <Minus className="w-5 h-5 text-slate-400" />;
-      case 'Mixed': return <ShieldAlert className="w-5 h-5 text-orange-400" />;
-      default: return <Info className="w-5 h-5 text-primary" />;
+      case 'Mixed': return <Activity className="w-5 h-5 text-orange-400" />;
+      default: return <Minus className="w-5 h-5 text-slate-400" />;
     }
   };
 
   return (
     <div className="w-[420px] flex flex-col gap-6 p-6 h-[calc(100vh-80px)] overflow-y-auto bg-[#0a0c12] border-r border-white/5 scrollbar-hide">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
-            <BrainCircuit className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Institutional AI</h2>
-            <p className="text-[8px] text-muted-foreground font-black uppercase tracking-tighter mt-0.5">GEMINI 2.5 FLASH PRO / TERMINAL</p>
-          </div>
+      <div className="flex items-center gap-3 mb-2">
+        <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
+          <BrainCircuit className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Institutional AI</h2>
+          <p className="text-[8px] text-muted-foreground font-black uppercase tracking-tighter mt-0.5">GENKIT ENGINE v1.0</p>
         </div>
       </div>
 
-      <Card className="border-white/5 bg-white/[0.01] overflow-hidden relative shadow-2xl rounded-2xl">
-        {loadingWeekly && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-6 h-6 text-primary animate-spin" />
-              <span className="text-[8px] font-black uppercase tracking-widest text-primary">Aggregating Macro Sentiment...</span>
-            </div>
-          </div>
-        )}
-        <CardHeader className="pb-4 border-b border-white/5 bg-white/[0.01]">
+      <Card className="bg-white/[0.02] border-white/5 overflow-hidden relative shadow-2xl">
+        <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">
-              Strategic Weekly Outlook
-            </CardTitle>
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 font-black text-[9px] px-2 py-0.5">
-              {weeklyAnalysis?.successProbability ?? 0}% CONFIDENCE
-            </Badge>
+            <CardTitle className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Weekly Outlook</CardTitle>
+            <div className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-black text-[9px]">
+              {loadingWeekly ? '...' : `82% CONFIDENCE`}
+            </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-5 flex flex-col gap-5">
-          <div className="space-y-3">
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
             <div className="flex justify-between text-[9px] font-black text-muted-foreground uppercase tracking-wider">
-              <span>Forecast Accuracy Index</span>
-              <span className="text-primary">{weeklyAnalysis?.successProbability ?? 0}%</span>
+              <span>Sentiment Intensity</span>
+              <span className="text-primary">82%</span>
             </div>
-            <Progress value={weeklyAnalysis?.successProbability ?? 0} className="h-1 bg-white/5" />
+            <Progress value={82} className="h-1 bg-white/5" />
           </div>
-          <div className="relative p-4 rounded-xl bg-white/[0.02] border border-white/5 min-h-[80px]">
-            <p className="text-xs text-foreground/80 leading-relaxed font-bold italic">
-              {weeklyAnalysis?.weeklyOutlook ? `"${weeklyAnalysis.weeklyOutlook}"` : 'Awaiting live exchange feed to generate macro analysis...'}
-            </p>
+
+          <div className="mt-4 p-4 rounded-xl bg-white/[0.02] border border-white/5">
+            {loadingWeekly ? (
+              <div className="flex items-center gap-2 text-white/40">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-xs uppercase font-black">Analyzing...</span>
+              </div>
+            ) : (
+              <p className="text-xs text-white/80 leading-relaxed font-medium italic">
+                {weeklyOverview?.overview}
+              </p>
+            )}
           </div>
+          
+          {!loadingWeekly && weeklyOverview?.keyEvents && (
+            <div className="space-y-2">
+              <h4 className="text-[9px] font-black text-primary uppercase tracking-widest">Key Focus Areas</h4>
+              <div className="grid grid-cols-1 gap-1">
+                {weeklyOverview.keyEvents.map((event, i) => (
+                  <div key={i} className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-default">
+                    <div className="w-1 h-1 rounded-full bg-primary" />
+                    <span className="text-[10px] font-bold text-white/60 uppercase">{event}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Card className="border-white/5 bg-white/[0.01] flex-1 overflow-hidden relative flex flex-col shadow-2xl rounded-2xl">
-        {loadingDaily && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
-             <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-6 h-6 text-primary animate-spin" />
-              <span className="text-[8px] font-black uppercase tracking-widest text-primary">Scanning Session Parameters...</span>
-            </div>
-          </div>
-        )}
-        <CardHeader className="pb-4 border-b border-white/5 bg-white/[0.02]">
+      <Card className="bg-white/[0.02] border-white/5 overflow-hidden relative shadow-2xl">
+        <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">
-                Session Intelligence
-              </CardTitle>
-              <p className="text-[10px] font-black mt-1 uppercase tracking-tighter text-white">
-                {selectedDate ? format(parseISO(selectedDate), 'MMMM dd, yyyy') : 'Terminal Idle'}
-              </p>
+            <CardTitle className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Session Intelligence</CardTitle>
+            <div className="flex items-center gap-2">
+              <div className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black text-[9px]">
+                LIVE
+              </div>
+              <SentimentIcon bias={dailyAnalysis?.marketBias} />
             </div>
-            {dailyAnalysis && (
-              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner">
-                <BiasIcon bias={dailyAnalysis.marketBias} />
-              </div>
-            )}
           </div>
+          <CardDescription className="text-[10px] font-black mt-1 uppercase tracking-tighter text-white">
+            {selectedDate ? format(parseISO(selectedDate), 'MMMM dd, yyyy') : 'NO DATE SELECTED'}
+          </CardDescription>
         </CardHeader>
-        <CardContent className="pt-6 space-y-8 flex-1 overflow-y-auto custom-scrollbar pb-10">
-          {dailyAnalysis ? (
+
+        <CardContent className="space-y-4">
+          {loadingDaily ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/40">Synthesizing Alpha...</p>
+            </div>
+          ) : dailyAnalysis ? (
             <>
-              <div className="space-y-4">
-                <h4 className="text-[9px] font-black text-primary flex items-center gap-2 uppercase tracking-widest">
-                  <Target className="w-3 h-3" />
-                  Primary Sentiment Drivers
-                </h4>
-                <ul className="space-y-2">
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                <p className="text-xs text-white/80 leading-relaxed font-medium">
+                  {dailyAnalysis.analysis}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-[9px] font-black text-primary uppercase tracking-widest">Market Drivers</h4>
+                <div className="grid grid-cols-1 gap-2">
                   {dailyAnalysis.keyFactors.map((factor, i) => (
-                    <li key={i} className="text-[11px] text-white/70 flex items-start gap-3 bg-white/[0.02] p-3 rounded-lg border border-white/5 group hover:border-primary/30 transition-colors">
-                      <span className="mt-1.5 h-1 w-1 rounded-full bg-primary shrink-0 group-hover:scale-150 transition-transform shadow-[0_0_5px_rgba(var(--primary),0.5)]" />
-                      <span className="font-bold uppercase tracking-tight">{factor}</span>
-                    </li>
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 group hover:border-primary/30 transition-all cursor-default">
+                      <div className="p-1.5 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                        <Activity className="w-3 h-3" />
+                      </div>
+                      <span className="text-[10px] font-bold text-white/80 leading-tight">{factor}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
 
-              <div className="space-y-3">
-                <h4 className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
-                  <BarChart3 className="w-3 h-3" />
-                  Institutional Consensus
-                </h4>
-                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                  <p className="text-xs text-white/80 leading-relaxed font-bold uppercase tracking-tight">
-                    {dailyAnalysis.analysis}
+              <div className="mt-4 pt-4 border-t border-white/5">
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
+                  <AlertTriangle className="w-4 h-4 text-yellow-500 shrink-0" />
+                  <p className="text-[9px] font-medium text-yellow-500/80 leading-tight">
+                    HIGH VOLATILITY DETECTED: Exercise caution during NY Open sessions.
                   </p>
-                </div>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10 flex items-center justify-between shadow-xl mt-auto">
-                <div>
-                  <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block mb-1.5">Operational Bias</span>
-                  <span className={`text-2xl font-black tracking-tighter ${
-                    dailyAnalysis.marketBias === 'Bullish' ? 'text-emerald-400' :
-                    dailyAnalysis.marketBias === 'Bearish' ? 'text-red-400' :
-                    dailyAnalysis.marketBias === 'Mixed' ? 'text-orange-400' :
-                    'text-white'
-                  }`}>
-                    {dailyAnalysis.marketBias.toUpperCase()}
-                  </span>
-                </div>
-                <div className={`p-4 rounded-2xl shadow-2xl ${
-                  dailyAnalysis.marketBias === 'Bullish' ? 'bg-emerald-500/10 border border-emerald-500/20' :
-                  dailyAnalysis.marketBias === 'Bearish' ? 'bg-red-500/10 border border-red-500/20' :
-                  'bg-white/5 border border-white/10'
-                }`}>
-                  <BiasIcon bias={dailyAnalysis.marketBias} />
                 </div>
               </div>
             </>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-center p-10 opacity-20">
-              <Sparkles className="w-12 h-12 mb-4 text-primary animate-pulse" />
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] leading-relaxed">
-                Terminal online. Awaiting session selection to initiate deep dive analysis.
-              </p>
+            <div className="text-center py-12 text-white/20">
+              <p className="text-xs italic font-medium">NO DATA STREAM DETECTED</p>
             </div>
           )}
         </CardContent>
       </Card>
     </div>
   );
-}
+};

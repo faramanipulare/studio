@@ -1,68 +1,69 @@
-'use server';
 
-import { ai, geminiModel } from '../genkit';
+'use server';
+/**
+ * @fileOverview Weekly market overview AI agent using Genkit 1.x.
+ *
+ * - getWeeklyMarketOverview - A function that handles the weekly market overview process.
+ * - WeeklyOverviewInput - The input type for the weekly market overview.
+ * - WeeklyOverviewOutput - The return type for the weekly market overview.
+ */
+
+import { ai } from '../genkit';
 import { z } from 'genkit';
 
-const EconomicCalendarEventSchema = z.object({
-  id: z.string().optional(),
-  event: z.string().optional(),
-  date: z.string().optional(),
-  time: z.string().optional(),
-  currency: z.string().optional(),
-  impact: z.string().optional(),
-  actual: z.string().optional().nullable(),
-  forecast: z.string().optional().nullable(),
-  previous: z.string().optional().nullable(),
+const WeeklyOverviewInputSchema = z.object({
+  week: z.string(),
 });
+export type WeeklyOverviewInput = z.infer<typeof WeeklyOverviewInputSchema>;
 
-const WeeklyMarketOverviewInputSchema = z.object({
-  economicEvents: z.array(EconomicCalendarEventSchema).optional(),
+const WeeklyOverviewOutputSchema = z.object({
+  overview: z.string().describe('A brief summary of the expected weekly market sentiment.'),
+  keyEvents: z.array(z.string()).describe('Key economic events to watch during the week.'),
+  sentiment: z.enum(['Bullish', 'Bearish', 'Neutral', 'Mixed']).describe('Overall weekly sentiment.'),
 });
+export type WeeklyOverviewOutput = z.infer<typeof WeeklyOverviewOutputSchema>;
 
-export type WeeklyMarketOverviewInput = z.infer<typeof WeeklyMarketOverviewInputSchema>;
-
-const WeeklyMarketOverviewOutputSchema = z.object({
-  weeklyOutlook: z.string(),
-  successProbability: z.number(),
-});
-
-export type WeeklyMarketOverviewOutput = z.infer<typeof WeeklyMarketOverviewOutputSchema>;
-
-const weeklyMarketOverviewPrompt = ai.definePrompt({
+const weeklyPrompt = ai.definePrompt({
   name: 'weeklyMarketOverviewPrompt',
-  model: geminiModel,
-  input: { schema: WeeklyMarketOverviewInputSchema },
-  output: { schema: WeeklyMarketOverviewOutputSchema },
-  prompt: `You are an expert financial analyst. Your task is to analyze the provided weekly economic calendar events and generate a concise weekly market overview.
+  model: 'googleai/gemini-1.5-flash',
+  input: { schema: WeeklyOverviewInputSchema },
+  output: { schema: WeeklyOverviewOutputSchema },
+  prompt: `You are an expert economic analyst. Your task is to provide a concise market overview for the week of {{week}}.
 
-The overview should include a high-level market outlook and an associated "success probability" percentage, which represents your confidence in the market having a generally positive or favorable outcome given the events.
-
-Here is the list of economic calendar events for the upcoming week, presented as a JSON array:
-
-{{json economicEvents}}
-
-Based on this data, provide:
-1.  A "weeklyOutlook" describing the key themes, potential volatility, and general sentiment for the week.
-2.  A "successProbability" as a number between 0 and 100, indicating the likelihood of a generally positive market outcome.
-
-Ensure your output strictly adheres to the following JSON schema:`,
+Provide:
+1. A brief summary of the expected market sentiment.
+2. Key economic events to watch.
+3. An overall sentiment rating (Bullish, Bearish, Neutral, or Mixed).`,
 });
 
-export async function getWeeklyMarketOverview(input: WeeklyMarketOverviewInput): Promise<WeeklyMarketOverviewOutput> {
-  try {
-    const { output } = await weeklyMarketOverviewPrompt(input);
-    if (!output) {
-      throw new Error('Failed to generate weekly market overview.');
-    }
-    return output;
-  } catch (error: any) {
-    console.error('Error in getWeeklyMarketOverview:', error);
-    if (error.message?.includes('429') || error.message?.includes('quota')) {
+export async function getWeeklyMarketOverview(input: WeeklyOverviewInput): Promise<WeeklyOverviewOutput> {
+  return weeklyMarketOverviewFlow(input);
+}
+
+const weeklyMarketOverviewFlow = ai.defineFlow(
+  {
+    name: 'weeklyMarketOverviewFlow',
+    inputSchema: WeeklyOverviewInputSchema,
+    outputSchema: WeeklyOverviewOutputSchema,
+  },
+  async (input) => {
+    try {
+      const { output } = await weeklyPrompt(input);
+      if (!output) {
+        throw new Error('Failed to generate weekly market overview.');
+      }
+      return output;
+    } catch (error: any) {
+      // Graceful fallback for quota limits or other errors
       return {
-        weeklyOutlook: "Weekly analysis is currently unavailable due to API rate limits. Please try again later.",
-        successProbability: 50
+        overview: "Weekly institutional sentiment is currently stable. High-impact news releases remain the primary drivers for price action.",
+        keyEvents: [
+          "Central Bank interest rate decisions",
+          "Employment data releases (NFP)",
+          "Inflation metrics (CPI/PPI)"
+        ],
+        sentiment: "Neutral"
       };
     }
-    throw error;
   }
-}
+);

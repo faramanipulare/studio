@@ -1,3 +1,4 @@
+
 'use server';
 
 import { format, parseISO } from 'date-fns';
@@ -13,20 +14,20 @@ export type EconomicEvent = {
   actual?: string;
   forecast?: string;
   previous?: string;
-  sentiment?: 'Bullish' | 'Bearish' | 'Neutral';
+  sentiment?: 'Bullish' | 'Bearish' | 'Neutral' | 'Mixed';
   impact_percentage?: number;
 };
 
 const BUCHAREST_TZ = 'Europe/Bucharest';
 
 /**
- * Fetches real-time economic calendar data from the ForexFactory (Faireconomy) feed.
- * This runs on the server to bypass CORS restrictions.
+ * Server Action to fetch weekly events.
+ * Marking as 'use server' to bypass CORS and network limitations of the browser environment.
  */
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   try {
     const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', {
-      next: { revalidate: 300 }, // Cache for 5 minutes
+      next: { revalidate: 300 },
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -39,8 +40,6 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     const weekly: Record<string, EconomicEvent[]> = {};
 
     rawData.forEach((item: any) => {
-      // The feed date is usually in UTC or has an offset
-      // e.g., "2024-03-21T14:00:00-04:00"
       const dateUtc = parseISO(item.date);
       const zonedDate = toZonedTime(dateUtc, BUCHAREST_TZ);
       
@@ -48,6 +47,21 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       const timeStr = format(zonedDate, 'HH:mm');
 
       if (!weekly[dayKey]) weekly[dayKey] = [];
+
+      // Simulated institutional impact logic
+      let sentiment: 'Bullish' | 'Bearish' | 'Neutral' | 'Mixed' = 'Neutral';
+      let impact_percentage = 0;
+
+      if (item.impact === 'High') {
+        impact_percentage = 75 + Math.floor(Math.random() * 20);
+        sentiment = Math.random() > 0.5 ? 'Bullish' : 'Bearish';
+      } else if (item.impact === 'Medium' || item.impact === 'Med') {
+        impact_percentage = 45 + Math.floor(Math.random() * 20);
+        sentiment = 'Mixed';
+      } else {
+        impact_percentage = 15 + Math.floor(Math.random() * 20);
+        sentiment = 'Neutral';
+      }
 
       weekly[dayKey].push({
         id: `${item.title}-${item.date}-${item.country}`.replace(/\s+/g, '-').toLowerCase(),
@@ -59,22 +73,19 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
         actual: item.actual || undefined,
         forecast: item.forecast || undefined,
         previous: item.previous || undefined,
-        // Calculate mock sentiment and impact based on the event's impact level
-        sentiment: item.impact === 'High' ? (Math.random() > 0.5 ? 'Bullish' : 'Bearish') : 'Neutral',
-        impact_percentage: item.impact === 'High' ? Math.floor(Math.random() * 40 + 60) : 
-                           item.impact === 'Medium' ? Math.floor(Math.random() * 30 + 30) : 
-                           Math.floor(Math.random() * 30)
+        sentiment: sentiment,
+        impact_percentage: impact_percentage
       });
     });
 
-    // Sort by time within each day
+    // Sort events by time
     Object.keys(weekly).forEach(day => {
       weekly[day].sort((a, b) => a.time.localeCompare(b.time));
     });
 
     return weekly;
   } catch (error) {
-    console.error("Critical: Live data feed unreachable server-side.", error);
+    console.error("Critical: Live data feed unreachable.", error);
     return {};
   }
 }
