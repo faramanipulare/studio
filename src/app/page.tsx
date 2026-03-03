@@ -39,11 +39,11 @@ export default function Home() {
       setLastSync(format(new Date(), 'HH:mm:ss'));
       
       const dates = Object.keys(data).sort();
-      const todayStr = format(new Date(), 'yyyy-MM-dd');
+      const march3rd = '2026-03-03';
       
       if (!selectedDate) {
-        if (dates.includes(todayStr)) {
-          setSelectedDate(todayStr);
+        if (dates.includes(march3rd)) {
+          setSelectedDate(march3rd);
         } else if (dates.length > 0) {
           setSelectedDate(dates[0]);
         }
@@ -72,7 +72,7 @@ export default function Home() {
   const filteredEvents = useMemo(() => {
     let events = selectedDayEvents;
     if (impactFilter !== 'All') {
-      events = selectedDayEvents.filter(e => e.impact === impactFilter);
+      events = selectedDayEvents.filter(e => e.impact === 'High');
     }
     return events;
   }, [selectedDayEvents, impactFilter]);
@@ -103,12 +103,9 @@ export default function Home() {
       <div className="flex flex-col min-h-screen bg-[#1F1C21] text-foreground font-body">
         <Header />
         <main className="flex-1 flex flex-col items-center justify-center gap-4">
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse" />
-            <Loader2 className="w-12 h-12 text-primary animate-spin relative z-10" />
-          </div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary animate-pulse px-4 text-center">
-            Synchronizing Institutional Session Feeds...
+          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">
+            Establishing Institutional Session Feeds...
           </p>
         </main>
       </div>
@@ -119,35 +116,35 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground font-body overflow-hidden">
       <Header />
       
-      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        {/* Mobile Header Controls */}
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 sticky top-0 z-30 backdrop-blur-md flex items-center justify-between shrink-0">
            <div className="flex items-center gap-2">
             <BrainCircuit className="w-5 h-5 text-primary" />
-            <span className="text-[11px] font-black uppercase text-white tracking-widest">Institutional IQ</span>
+            <span className="text-[11px] font-black uppercase text-white tracking-widest">Market Analysis</span>
           </div>
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button size="sm" className="bg-primary hover:bg-primary/80 text-white text-[10px] font-black px-4 h-8 rounded-full shadow-lg shadow-primary/20">
+              <Button size="sm" className="bg-primary hover:bg-primary/80 text-white text-[10px] font-black px-4 h-8 rounded-full shadow-lg">
                 OPEN ANALYSIS
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-[2rem] flex flex-col">
-              <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto my-4 shrink-0" />
-              <div className="flex-1 overflow-y-auto px-4 pb-12">
-                <AISidebar 
-                  selectedDayEvents={selectedDayEvents} 
-                  selectedDate={selectedDate} 
-                  weeklyEvents={flatWeeklyEvents}
-                />
+            <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-[2rem] overflow-hidden">
+              <div className="flex flex-col h-full">
+                <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto my-4 shrink-0" />
+                <div className="flex-1 overflow-y-auto scrollbar-hide">
+                  <AISidebar 
+                    selectedDayEvents={selectedDayEvents} 
+                    selectedDate={selectedDate} 
+                    weeklyEvents={flatWeeklyEvents}
+                  />
+                </div>
               </div>
             </SheetContent>
           </Sheet>
         </div>
 
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full">
+        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[420px] overflow-hidden">
           <AISidebar 
             selectedDayEvents={selectedDayEvents} 
             selectedDate={selectedDate} 
@@ -155,26 +152,24 @@ export default function Home() {
           />
         </div>
 
-        {/* Main Feed Content */}
         <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden">
-          {/* Calendar Header */}
           <div className="p-4 lg:p-6 pb-2 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.2em]">
                   <Activity className="w-3 h-3 animate-pulse" />
-                  Real-Time Schedule
+                  Real-Time Live Calendar
                 </div>
-                <h2 className="text-xl lg:text-2xl font-black tracking-tight text-white flex flex-col sm:flex-row sm:items-center gap-2">
-                  Institutional Calendar
-                  <span className="text-white/20 hidden sm:inline">/</span>
-                  <span className="text-white/40 text-sm font-medium tracking-normal">
-                    {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMM d') : 'Awaiting Selection'}
+                <h2 className="text-xl lg:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                  Session Schedule
+                  <span className="text-white/20">/</span>
+                  <span className="text-white/40 text-sm font-medium">
+                    {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMM d') : 'Selecting...'}
                   </span>
                 </h2>
                 <div className="flex items-center gap-1.5 text-[9px] font-black text-white/20 uppercase tracking-widest">
                   <Clock className="w-2.5 h-2.5" />
-                  Last Sync: {lastSync || 'Initializing...'}
+                  Synced: {lastSync || '...'}
                 </div>
               </div>
 
@@ -209,7 +204,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Daily Selector */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
               {Object.keys(weeklyData).sort().map((dateStr) => {
                 const date = parseISO(dateStr);
@@ -250,10 +244,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Scrollable Events Container */}
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0">
-            <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl mb-20">
-              {/* Desktop View */}
+          <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32">
+            <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -291,7 +283,6 @@ export default function Home() {
                 </table>
               </div>
 
-              {/* Mobile View */}
               <div className="md:hidden divide-y divide-white/5">
                 {filteredEvents.map((event) => (
                   <div key={event.id} className="p-4 space-y-3">
@@ -331,7 +322,7 @@ export default function Home() {
               {filteredEvents.length === 0 && (
                 <div className="py-20 text-center text-white/20 flex flex-col items-center gap-2">
                   <CalendarDays className="w-10 h-10 opacity-20" />
-                  <p className="text-[10px] font-black uppercase tracking-widest">No scheduled volatility events</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest">No volatility events scheduled</p>
                 </div>
               )}
             </div>
