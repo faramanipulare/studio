@@ -79,7 +79,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   };
 
   return (
-    <div className="w-full lg:w-[420px] flex flex-col gap-6 p-4 lg:p-6 h-full overflow-y-auto bg-[#1F1C21] scrollbar-hide border-r border-white/5 lg:border-r-0">
+    <div className="w-full lg:w-[420px] flex flex-col gap-6 p-4 lg:p-6 h-full lg:h-screen overflow-y-auto bg-[#1F1C21] border-r border-white/5 lg:border-r-0 pb-20 lg:pb-6">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
@@ -87,17 +87,17 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           </div>
           <div>
             <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Market Intelligence</h2>
-            <p className="text-[8px] text-primary font-black uppercase tracking-widest mt-0.5">GENKIT CORE 1.0</p>
+            <p className="text-[8px] text-primary font-black uppercase tracking-widest mt-0.5">INSTITUTIONAL CORE</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10">
           <ShieldCheck className="w-3 h-3 text-primary" />
-          <span className="text-[8px] font-black text-white/40 uppercase">Verified Feed</span>
+          <span className="text-[8px] font-black text-white/40 uppercase">LIVE FEED</span>
         </div>
       </div>
 
       {/* Weekly Outlook Card */}
-      <Card className="bg-white/[0.02] border-white/5 overflow-hidden relative shadow-2xl">
+      <Card className="bg-white/[0.02] border-white/5 overflow-hidden relative shadow-2xl shrink-0">
         <CardHeader className="pb-3 border-b border-white/5">
           <div className="flex justify-between items-center">
             <CardTitle className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Institutional Outlook</CardTitle>
@@ -129,7 +129,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           </div>
           
           {!loadingWeekly && weeklyOverview?.keyEvents && (
-            <div className="space-y-2">
+            <div className="space-y-2 pb-2">
               <h4 className="text-[9px] font-black text-primary uppercase tracking-widest">Strategic Focus</h4>
               <div className="grid grid-cols-1 gap-1.5">
                 {weeklyOverview.keyEvents.map((event, i) => (
@@ -145,7 +145,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
       </Card>
 
       {/* Daily Analysis Card */}
-      <Card className="bg-white/[0.02] border-white/5 overflow-hidden relative shadow-2xl">
+      <Card className="bg-white/[0.02] border-white/5 overflow-hidden relative shadow-2xl shrink-0">
         <CardHeader className="pb-3 border-b border-white/5">
           <div className="flex justify-between items-center">
             <CardTitle className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Session IQ</CardTitle>
@@ -188,11 +188,11 @@ export const AISidebar: React.FC<AISidebarProps> = ({
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-white/5">
+              <div className="mt-4 pt-4 border-t border-white/5 pb-4">
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/10">
                   <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0" />
                   <p className="text-[9px] font-black text-yellow-500/90 leading-snug uppercase tracking-tight">
-                    Institutional Alert: Liquidity shifts expected during NY Open.
+                    Institutional Alert: Liquidity shifts expected.
                   </p>
                 </div>
               </div>
@@ -200,7 +200,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           ) : (
             <div className="text-center py-12 text-white/10 space-y-2">
               <Activity className="w-8 h-8 mx-auto opacity-10" />
-              <p className="text-[10px] font-black uppercase tracking-widest">Syncing with Exchange Feeds...</p>
+              <p className="text-[10px] font-black uppercase tracking-widest">Select a day to begin...</p>
             </div>
           )}
         </CardContent>
