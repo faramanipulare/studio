@@ -23,6 +23,20 @@ export function Header() {
     audioRef.current.volume = 0.5;
 
     // Google Translate Initialization
+    window.googleTranslateElementInit = () => {
+      if (window.google && window.google.translate) {
+        new window.google.translate.TranslateElement(
+          { 
+            pageLanguage: 'en', 
+            includedLanguages: 'ro,en',
+            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false 
+          }, 
+          'google_translate_element'
+        );
+      }
+    };
+
     const addGoogleTranslateScript = () => {
       if (document.getElementById('google-translate-script')) return;
       const script = document.createElement('script');
@@ -30,20 +44,6 @@ export function Header() {
       script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
       script.async = true;
       document.body.appendChild(script);
-
-      window.googleTranslateElementInit = () => {
-        if (window.google && window.google.translate) {
-          new window.google.translate.TranslateElement(
-            { 
-              pageLanguage: 'en', 
-              includedLanguages: 'ro,en',
-              layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-              autoDisplay: false 
-            }, 
-            'google_translate_element'
-          );
-        }
-      };
     };
 
     addGoogleTranslateScript();
@@ -63,8 +63,7 @@ export function Header() {
       combo.value = langCode;
       combo.dispatchEvent(new Event('change'));
     } else {
-      // If the combo isn't ready, we try to use the alternative method or wait
-      console.warn("Google Translate widget initializing...");
+      console.warn("Google Translate widget initializing or not found. Please wait.");
     }
   };
 
@@ -89,7 +88,7 @@ export function Header() {
   return (
     <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/80 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
       {/* Hidden container for the Google Translate Widget */}
-      <div id="google_translate_element" className="hidden"></div>
+      <div id="google_translate_element" className="hidden opacity-0 pointer-events-none absolute"></div>
 
       <div className="flex items-center gap-3 lg:gap-5">
         <div className="relative group shrink-0">
@@ -116,9 +115,9 @@ export function Header() {
           <button 
             onClick={() => changeLanguage('ro')}
             className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70"
-            title="Română"
+            title="Tradu în Română"
           >
-            <svg viewBox="0 0 3 2" className="w-full h-full">
+            <svg viewBox="0 0 3 2" className="w-full h-full pointer-events-none">
               <rect width="1" height="2" fill="#002B7F"/>
               <rect width="1" height="2" x="1" fill="#FCD116"/>
               <rect width="1" height="2" x="2" fill="#CE1126"/>
@@ -127,9 +126,9 @@ export function Header() {
           <button 
             onClick={() => changeLanguage('en')}
             className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70"
-            title="English"
+            title="Translate to English"
           >
-             <svg viewBox="0 0 60 30" className="w-full h-full">
+             <svg viewBox="0 0 60 30" className="w-full h-full pointer-events-none">
               <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
               <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/>
               <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="4"/>

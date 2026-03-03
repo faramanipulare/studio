@@ -30,10 +30,10 @@ export const AISidebar: React.FC<AISidebarProps> = ({
       if (!weeklyEvents || weeklyEvents.length === 0) return;
       setLoadingWeekly(true);
       try {
-        const result = await getWeeklyMarketOverview({ week: 'Current Session' });
+        const result = await getWeeklyMarketOverview({ week: 'Live Trading Week' });
         setWeeklyOverview(result);
       } catch (err) {
-        console.error('Error fetching weekly overview:', err);
+        console.error('Weekly analysis failure:', err);
       } finally {
         setLoadingWeekly(false);
       }
@@ -60,7 +60,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
         });
         setDailyAnalysis(result);
       } catch (err) {
-        console.error('Error fetching daily analysis:', err);
+        console.error('Daily analysis failure:', err);
       } finally {
         setLoadingDaily(false);
       }
@@ -78,7 +78,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-6 p-4 lg:p-6 h-full overflow-y-auto bg-[#1F1C21] pb-24">
+    <div className="flex flex-col gap-6 py-4 h-full bg-[#1F1C21]">
       <div className="flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
@@ -155,7 +155,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
             </div>
           </div>
           <CardDescription className="text-[10px] font-black mt-1 uppercase tracking-widest text-white/80">
-            {selectedDate ? format(parseISO(selectedDate), 'MMMM dd, yyyy') : 'Awaiting Selection...'}
+            {selectedDate ? format(parseISO(selectedDate), 'MMMM dd, yyyy') : 'Live Session...'}
           </CardDescription>
         </CardHeader>
 
@@ -197,7 +197,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           ) : (
             <div className="text-center py-12 text-white/10 space-y-2">
               <Activity className="w-8 h-8 mx-auto opacity-10" />
-              <p className="text-[10px] font-black uppercase tracking-widest">Select a day to begin...</p>
+              <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Live Feed Sync...</p>
             </div>
           )}
         </CardContent>

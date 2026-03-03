@@ -42,7 +42,7 @@
   }
 }
 
-/* Hide Google Translate Bar */
+/* Hide Google Translate Bar and Artifacts */
 .goog-te-banner-frame.skiptranslate {
   display: none !important;
 }
@@ -54,6 +54,12 @@ body {
 }
 .trans-section {
   display: none;
+}
+#google_translate_element {
+  display: none !important;
+}
+.goog-te-gadget {
+  color: transparent !important;
 }
 
 /* Custom scrollbar */

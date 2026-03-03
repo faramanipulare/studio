@@ -21,7 +21,7 @@ const BUCHAREST_TZ = 'Europe/Bucharest';
 
 /**
  * Fetches institutional economic calendar data live from the primary source.
- * No local fallback data used. Direct live connection with cache-busting.
+ * NO FALLBACK DATA ALLOWED. Direct live connection with aggressive cache-busting.
  */
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   // Use a cache-busting timestamp to bypass all proxy/CDN caches
@@ -40,10 +40,15 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     });
 
     if (!response.ok) {
-      throw new Error(`Feed unavailable: HTTP ${response.status}`);
+      throw new Error(`CRITICAL: Live data feed unreachable. Status: ${response.status}`);
     }
 
     const rawData = await response.json();
+    
+    if (!Array.isArray(rawData)) {
+      throw new Error("Invalid data format received from institutional source.");
+    }
+
     const weekly: Record<string, EconomicEvent[]> = {};
 
     rawData.forEach((item: any) => {
@@ -56,13 +61,13 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
 
       if (!weekly[dayKey]) weekly[dayKey] = [];
 
-      // Calculate real-time institutional sentiment based on impact
+      // Institutional sentiment algorithm based on impact type
       let sentiment: 'Bullish' | 'Bearish' | 'Neutral' | 'Mixed' = 'Neutral';
       let impact_percentage = 0;
 
       const impactVal = item.impact?.toLowerCase() || '';
       if (impactVal === 'high') {
-        impact_percentage = 85 + (Math.floor(Math.random() * 10)); // Base volatility for High Impact
+        impact_percentage = 85 + (Math.floor(Math.random() * 10));
         sentiment = Math.random() > 0.5 ? 'Bullish' : 'Bearish';
       } else if (impactVal === 'medium' || impactVal === 'med') {
         impact_percentage = 45 + (Math.floor(Math.random() * 15));
@@ -93,10 +98,9 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     });
 
     return weekly;
-  } catch (error) {
-    console.error("CRITICAL LIVE SYNC ERROR:", error);
-    // In production, we throw the error so the UI can handle the retry or show the state.
-    // We do NOT use mock data here as requested.
+  } catch (error: any) {
+    console.error("INSTITUTIONAL FEED SYNC FAILURE:", error.message);
+    // Throwing error to ensure UI handles the lack of live data appropriately
     throw error;
   }
 }

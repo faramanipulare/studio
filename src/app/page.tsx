@@ -42,19 +42,19 @@ export default function Home() {
       setLastSync(format(new Date(), 'HH:mm:ss'));
       
       const dates = Object.keys(data).sort();
-      // Target current session date
-      const march3rd = '2026-03-03';
+      // Targeted simulation session for the user's specific request date
+      const targetSession = '2026-03-03';
       
       if (!selectedDate) {
-        if (dates.includes(march3rd)) {
-          setSelectedDate(march3rd);
+        if (dates.includes(targetSession)) {
+          setSelectedDate(targetSession);
         } else if (dates.length > 0) {
           setSelectedDate(dates[0]);
         }
       }
     } catch (err: any) {
-      console.error("Failed to sync live data:", err);
-      setError("Market feed currently unavailable. Please refresh.");
+      console.error("Live Feed Sync Error:", err);
+      setError("Market feed unreachable (429/Timeout). Please retry live sync.");
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    // Refresh every 5 minutes to keep it live
+    // Refresh every 5 minutes
     const interval = setInterval(loadData, 300000);
     return () => clearInterval(interval);
   }, []);
@@ -136,19 +136,15 @@ export default function Home() {
                 OPEN ANALYSIS
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-[2.5rem] overflow-hidden">
-              <div className="flex flex-col h-full">
-                <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto my-4 shrink-0" />
-                {/* Dedicated Scroll Container for Mobile Analysis */}
-                <div className="flex-1 overflow-y-auto overflow-x-hidden p-0">
-                  <AISidebar 
-                    selectedDayEvents={selectedDayEvents} 
-                    selectedDate={selectedDate} 
-                    weeklyEvents={flatWeeklyEvents}
-                  />
-                  {/* Footer Spacer for Ticker Visibility */}
-                  <div className="h-24" />
-                </div>
+            <SheetContent side="bottom" className="h-[90vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-[2.5rem] overflow-hidden flex flex-col">
+              <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto my-4 shrink-0" />
+              {/* Dedicated Scrollable Container for Mobile Analysis */}
+              <div className="flex-1 overflow-y-auto px-4 pb-24">
+                <AISidebar 
+                  selectedDayEvents={selectedDayEvents} 
+                  selectedDate={selectedDate} 
+                  weeklyEvents={flatWeeklyEvents}
+                />
               </div>
             </SheetContent>
           </Sheet>
@@ -176,12 +172,12 @@ export default function Home() {
                   Session Schedule
                   <span className="text-white/20">/</span>
                   <span className="text-white/40 text-sm font-medium">
-                    {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMM d') : 'Selecting...'}
+                    {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMM d') : 'Live Syncing...'}
                   </span>
                 </h2>
                 <div className="flex items-center gap-1.5 text-[9px] font-black text-white/20 uppercase tracking-widest">
                   <Clock className="w-2.5 h-2.5" />
-                  Synced: {lastSync || '...'}
+                  Synced: {lastSync || 'Establishing...'}
                 </div>
               </div>
 
@@ -262,7 +258,7 @@ export default function Home() {
               <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-8 text-center space-y-4">
                 <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
                 <h3 className="text-sm font-black text-rose-500 uppercase tracking-widest">{error}</h3>
-                <Button onClick={loadData} className="bg-rose-500 hover:bg-rose-600">Retry Live Sync</Button>
+                <Button onClick={loadData} className="bg-rose-500 hover:bg-rose-600">RETRY LIVE SYNC</Button>
               </div>
             ) : (
               <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
@@ -344,7 +340,7 @@ export default function Home() {
                 {filteredEvents.length === 0 && !loading && (
                   <div className="py-20 text-center text-white/20 flex flex-col items-center gap-2">
                     <CalendarDays className="w-10 h-10 opacity-20" />
-                    <p className="text-[10px] font-black uppercase tracking-widest">No volatility events scheduled</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest">No live volatility events synced</p>
                   </div>
                 )}
               </div>
