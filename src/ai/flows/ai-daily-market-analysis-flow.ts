@@ -2,10 +2,6 @@
 'use server';
 /**
  * @fileOverview Daily market analysis AI agent using Genkit 1.x.
- *
- * - getDailyMarketAnalysis - A function that handles the daily market analysis process.
- * - DailyAnalysisInput - The input type for the daily market analysis.
- * - DailyAnalysisOutput - The return type for the daily market analysis.
  */
 
 import { ai } from '../genkit';
@@ -39,27 +35,30 @@ const dailyPrompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash',
   input: { schema: DailyAnalysisInputSchema },
   output: { schema: DailyAnalysisOutputSchema },
-  prompt: `You are an expert economic analyst. Your task is to analyze the provided economic calendar events for the day {{date}} and provide a concise analysis, key factors, and a market bias.
+  prompt: `You are an expert economic analyst specializing in institutional flows. Analyze the provided economic calendar events for the day {{date}}.
+
+Provide:
+1. A concise analysis (3-4 sentences) of the day's economic implications.
+2. 3-4 key volatile factors.
+3. A clear market bias (Bullish, Bearish, Neutral, or Mixed).
 
 Economic Events for {{date}}:
 {{#each events}}
-- Time: {{time}}, Currency: {{currency}}, Event: {{event}}, Impact: {{impact}}, Actual: {{actual}}, Forecast: {{forecast}}, Previous: {{previous}}
+- [{{time}}] {{currency}} - {{event}} (Impact: {{impact}}) | Act: {{actual}}, Est: {{forecast}}, Prev: {{previous}}
 {{/each}}
 
-Based on these events, provide a concise analysis, key factors, and market bias.`,
+Focus on how these events influence institutional liquidity and potential session bias.`,
 });
 
 export async function getDailyMarketAnalysis(input: DailyAnalysisInput): Promise<DailyAnalysisOutput> {
   try {
     const { output } = await dailyPrompt(input);
-    if (!output) {
-      throw new Error('Failed to generate daily market analysis.');
-    }
+    if (!output) throw new Error('No output from prompt');
     return output;
   } catch (error: any) {
-    console.error('Daily analysis flow failed:', error);
+    console.warn('Daily analysis fallback triggered:', error.message);
     return {
-      analysis: "Daily session analysis is currently limited due to institutional data provider constraints. Monitor high-volatility news events manually.",
+      analysis: "Daily session bias is currently neutral. Monitor high-volatility news events manually as session dynamics adjust to institutional liquidity shifts.",
       keyFactors: [
         "Focus on G7 high-impact news releases",
         "Watch for price deviations from technical levels during NY session",

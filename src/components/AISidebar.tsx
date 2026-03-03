@@ -79,10 +79,10 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   };
 
   return (
-    <div className="w-full lg:w-[420px] flex flex-col gap-6 p-6 h-full overflow-y-auto bg-[#0a0c12] scrollbar-hide border-r border-white/5 lg:border-r-0">
+    <div className="w-full lg:w-[420px] flex flex-col gap-6 p-4 lg:p-6 h-full overflow-y-auto bg-[#1F1C21] scrollbar-hide border-r border-white/5 lg:border-r-0">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg border border-primary/20 shadow-[0_0_15px_-5px_hsl(var(--primary))]">
+          <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
             <BrainCircuit className="w-5 h-5 text-primary" />
           </div>
           <div>
@@ -119,7 +119,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
             {loadingWeekly ? (
               <div className="flex items-center justify-center py-4 gap-3 text-white/40">
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                <span className="text-[10px] uppercase font-black tracking-widest">Processing Session Dynamics...</span>
+                <span className="text-[10px] uppercase font-black tracking-widest">Processing...</span>
               </div>
             ) : (
               <p className="text-xs text-white/80 leading-relaxed font-medium italic">
@@ -133,8 +133,8 @@ export const AISidebar: React.FC<AISidebarProps> = ({
               <h4 className="text-[9px] font-black text-primary uppercase tracking-widest">Strategic Focus</h4>
               <div className="grid grid-cols-1 gap-1.5">
                 {weeklyOverview.keyEvents.map((event, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-primary/20 transition-all">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_5px_hsl(var(--primary))]" />
+                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-white/5 border border-white/5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                     <span className="text-[10px] font-bold text-white/70 uppercase leading-tight">{event}</span>
                   </div>
                 ))}
@@ -164,11 +164,8 @@ export const AISidebar: React.FC<AISidebarProps> = ({
 
         <CardContent className="space-y-5 pt-4">
           {loadingDaily ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse" />
-                <Loader2 className="w-10 h-10 text-primary animate-spin relative" />
-              </div>
+            <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
               <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/40">Synthesizing Alpha...</p>
             </div>
           ) : dailyAnalysis ? (
@@ -183,10 +180,8 @@ export const AISidebar: React.FC<AISidebarProps> = ({
                 <h4 className="text-[9px] font-black text-primary uppercase tracking-widest">Volatile Vectors</h4>
                 <div className="grid grid-cols-1 gap-2">
                   {dailyAnalysis.keyFactors.map((factor, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 group hover:border-primary/40 transition-all cursor-default">
-                      <div className="p-1.5 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                        <Activity className="w-3.5 h-3.5" />
-                      </div>
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
+                      <Activity className="w-3.5 h-3.5 text-primary" />
                       <span className="text-[10px] font-bold text-white/80 leading-snug">{factor}</span>
                     </div>
                   ))}
@@ -197,13 +192,13 @@ export const AISidebar: React.FC<AISidebarProps> = ({
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/10">
                   <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0" />
                   <p className="text-[9px] font-black text-yellow-500/90 leading-snug uppercase tracking-tight">
-                    Institutional Alert: Liquidity shifts expected during NY Open. Exercise rigorous risk management.
+                    Institutional Alert: Liquidity shifts expected during NY Open.
                   </p>
                 </div>
               </div>
             </>
           ) : (
-            <div className="text-center py-20 text-white/10 space-y-2">
+            <div className="text-center py-12 text-white/10 space-y-2">
               <Activity className="w-8 h-8 mx-auto opacity-10" />
               <p className="text-[10px] font-black uppercase tracking-widest">Syncing with Exchange Feeds...</p>
             </div>

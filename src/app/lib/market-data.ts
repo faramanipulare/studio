@@ -20,10 +20,6 @@ export type EconomicEvent = {
 
 const BUCHAREST_TZ = 'Europe/Bucharest';
 
-/**
- * Server Action to fetch weekly events.
- * Marking as 'use server' to bypass CORS and network limitations of the browser environment.
- */
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   try {
     const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', {
@@ -52,10 +48,11 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       let sentiment: 'Bullish' | 'Bearish' | 'Neutral' | 'Mixed' = 'Neutral';
       let impact_percentage = 0;
 
-      if (item.impact === 'High') {
+      const impactVal = item.impact?.toLowerCase() || '';
+      if (impactVal === 'high') {
         impact_percentage = 75 + Math.floor(Math.random() * 20);
         sentiment = Math.random() > 0.5 ? 'Bullish' : 'Bearish';
-      } else if (item.impact === 'Medium' || item.impact === 'Med') {
+      } else if (impactVal === 'medium' || impactVal === 'med') {
         impact_percentage = 45 + Math.floor(Math.random() * 20);
         sentiment = 'Mixed';
       } else {
