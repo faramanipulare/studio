@@ -37,6 +37,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
 
     rawData.forEach((item: any) => {
       const dateUtc = parseISO(item.date);
+      // date-fns-tz v3 API
       const zonedDate = toZonedTime(dateUtc, BUCHAREST_TZ);
       
       const dayKey = format(zonedDate, 'yyyy-MM-dd');
