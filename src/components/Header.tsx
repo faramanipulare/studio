@@ -19,11 +19,9 @@ export function Header() {
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     
-    // Audio stream for Pescobar FM
     audioRef.current = new Audio("https://listen.radioking.com/radio/701141/stream/766385");
     audioRef.current.volume = 0.5;
 
-    // Google Translate Initialization
     window.googleTranslateElementInit = () => {
       if (window.google && window.google.translate) {
         new window.google.translate.TranslateElement(
@@ -59,28 +57,29 @@ export function Header() {
   }, []);
 
   const changeLanguage = (langCode: 'ro' | 'en') => {
-    const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-    if (combo) {
-      combo.value = langCode;
-      combo.dispatchEvent(new Event('change'));
-    } else {
-      // Robust retry logic for VPS latency
-      let attempts = 0;
-      const maxAttempts = 10;
-      const checkInterval = setInterval(() => {
-        const retryCombo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-        if (retryCombo) {
-          retryCombo.value = langCode;
-          retryCombo.dispatchEvent(new Event('change'));
-          clearInterval(checkInterval);
-        }
-        attempts++;
-        if (attempts >= maxAttempts) {
-          clearInterval(checkInterval);
-          console.warn("Translation widget timed out.");
-        }
-      }, 500);
-    }
+    const triggerTranslation = () => {
+      const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+      if (combo) {
+        combo.value = langCode;
+        combo.dispatchEvent(new Event('change'));
+      }
+    };
+
+    // Retry logic for initialization
+    let attempts = 0;
+    const maxAttempts = 20;
+    const checkInterval = setInterval(() => {
+      const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+      if (combo) {
+        triggerTranslation();
+        clearInterval(checkInterval);
+      }
+      attempts++;
+      if (attempts >= maxAttempts) {
+        clearInterval(checkInterval);
+        console.warn("Translation widget timed out.");
+      }
+    }, 500);
   };
 
   const toggleRadio = () => {
@@ -103,7 +102,6 @@ export function Header() {
 
   return (
     <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/80 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
-      {/* Hidden Google Translate container */}
       <div id="google_translate_element" className="hidden absolute opacity-0"></div>
 
       <div className="flex items-center gap-3 lg:gap-5">
@@ -127,7 +125,6 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3 lg:gap-8">
-        {/* Language Selectors */}
         <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
           <button 
             onClick={() => changeLanguage('ro')}
@@ -156,7 +153,6 @@ export function Header() {
           </button>
         </div>
 
-        {/* Pescobar FM Radio Button */}
         <button 
           onClick={toggleRadio}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
