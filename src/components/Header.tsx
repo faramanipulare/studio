@@ -20,88 +20,73 @@ export function Header() {
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     
-    audioRef.current = new Audio("https://listen.radioking.com/radio/701141/stream/766385");
-    audioRef.current.volume = 0.5;
-
-    // Initialize Google Translate
+    // Google Translate Initialization
     window.googleTranslateElementInit = () => {
-      if (window.google && window.google.translate) {
-        new window.google.translate.TranslateElement(
-          { 
-            pageLanguage: 'en', 
-            includedLanguages: 'ro,en',
-            autoDisplay: false,
-            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
-          }, 
-          'google_translate_element'
-        );
-      }
+      new window.google.translate.TranslateElement(
+        { 
+          pageLanguage: 'en', 
+          includedLanguages: 'ro,en',
+          layout: window.google?.translate?.TranslateElement?.InlineLayout?.SIMPLE,
+          autoDisplay: false 
+        }, 
+        'google_translate_element'
+      );
     };
 
-    const scriptId = 'google-translate-script';
-    if (!document.getElementById(scriptId)) {
-      const script = document.createElement('script');
-      script.id = scriptId;
-      script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-      script.async = true;
-      document.body.appendChild(script);
-    }
-
-    return () => {
-      clearInterval(timer);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
+    const addScript = () => {
+      if (document.getElementById('google-translate-script')) return;
+      const s = document.createElement('script');
+      s.id = 'google-translate-script';
+      s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      s.async = true;
+      document.body.appendChild(s);
     };
+
+    addScript();
+
+    return () => clearInterval(timer);
   }, []);
 
-  const changeLanguage = (langCode: 'ro' | 'en') => {
-    const triggerTranslation = () => {
-      const selectElement = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-      if (selectElement) {
-        selectElement.value = langCode;
-        selectElement.dispatchEvent(new Event('change'));
-        return true;
-      }
-      return false;
-    };
-
-    if (!triggerTranslation()) {
-      let attempts = 0;
-      const pollInterval = setInterval(() => {
-        const success = triggerTranslation();
-        attempts++;
-        if (success || attempts >= 40) { // Try for ~13 seconds
-          clearInterval(pollInterval);
+  const changeLanguage = (lang: 'ro' | 'en') => {
+    const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+    if (combo) {
+      combo.value = lang;
+      combo.dispatchEvent(new Event('change'));
+    } else {
+      // If combo not ready, try one more time after a short delay
+      setTimeout(() => {
+        const retryCombo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+        if (retryCombo) {
+          retryCombo.value = lang;
+          retryCombo.dispatchEvent(new Event('change'));
         }
-      }, 333);
+      }, 500);
     }
   };
 
   const toggleRadio = () => {
-    if (!audioRef.current) return;
+    if (!audioRef.current) {
+      audioRef.current = new Audio("https://listen.radioking.com/radio/701141/stream/766385");
+      audioRef.current.volume = 0.4;
+    }
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch(() => console.warn("Audio needs user interaction"));
+      audioRef.current.play().catch(() => {});
     }
     setIsPlaying(!isPlaying);
   };
 
   const bucharestTime = time ? new Intl.DateTimeFormat('ro-RO', {
     timeZone: 'Europe/Bucharest',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
     hour12: false
   }).format(time) : '--:--:--';
 
   return (
     <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/90 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
-      {/* Container for Google Translate - Must be present */}
-      <div id="google_translate_element" className="fixed -top-full left-0 opacity-0 pointer-events-none"></div>
-
+      <div id="google_translate_element" style={{ display: 'none' }}></div>
+      
       <div className="flex items-center gap-3 lg:gap-5">
         <div className="relative group shrink-0">
           <div className="absolute -inset-1 bg-gradient-to-r from-primary to-blue-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
@@ -127,18 +112,14 @@ export function Header() {
           <button 
             onClick={() => changeLanguage('ro')}
             className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 active:scale-95 transition-all shadow-lg border border-white/10 cursor-pointer"
-            title="Tradu în Română"
           >
             <svg viewBox="0 0 3 2" className="w-full h-full">
-              <rect width="1" height="2" fill="#002B7F"/>
-              <rect width="1" height="2" x="1" fill="#FCD116"/>
-              <rect width="1" height="2" x="2" fill="#CE1126"/>
+              <rect width="1" height="2" fill="#002B7F"/><rect width="1" height="2" x="1" fill="#FCD116"/><rect width="1" height="2" x="2" fill="#CE1126"/>
             </svg>
           </button>
           <button 
             onClick={() => changeLanguage('en')}
             className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 active:scale-95 transition-all shadow-lg border border-white/10 cursor-pointer"
-            title="Translate to English"
           >
              <svg viewBox="0 0 60 30" className="w-full h-full">
               <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
@@ -154,9 +135,7 @@ export function Header() {
         <button 
           onClick={toggleRadio}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
-            isPlaying 
-              ? 'bg-primary/20 border-primary text-primary animate-pulse' 
-              : 'bg-white/5 border-white/10 text-white/40 hover:text-white'
+            isPlaying ? 'bg-primary/20 border-primary text-primary animate-pulse' : 'bg-white/5 border-white/10 text-white/40 hover:text-white'
           }`}
         >
           <Radio className="w-3.5 h-3.5" />
