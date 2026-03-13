@@ -43,6 +43,7 @@ export function Header() {
 
   const changeLanguage = (lang: 'ro' | 'en') => {
     const domain = window.location.hostname;
+    // Set cookie and force reload to ensure clean hydration
     document.cookie = `googtrans=/en/${lang}; domain=${domain}; path=/`;
     document.cookie = `googtrans=/en/${lang}; path=/`;
     window.location.reload();

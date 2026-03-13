@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Institutional market data fetcher - LIVE VERSION.
+ * @fileOverview Institutional market data fetcher - PRODUCTION VERSION.
  * Fetches real-time data from ForexFactory source with strict cache bypassing.
  */
 
@@ -32,16 +32,22 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       },
     });
 
-    if (!response.ok) return {};
+    if (!response.ok) {
+      console.error("FF Feed Error Status:", response.status);
+      return {};
+    }
 
     const rawData = await response.json();
-    if (!Array.isArray(rawData)) return {};
+    if (!Array.isArray(rawData)) {
+      console.error("FF Feed Format Error: Expected array");
+      return {};
+    }
 
     const weekly: Record<string, EconomicEvent[]> = {};
 
     rawData.forEach((item: any, index: number) => {
       try {
-        if (!item.date) return;
+        if (!item.date || !item.title) return;
         
         const eventDate = new Date(item.date);
         const dayKey = eventDate.toISOString().split('T')[0];
@@ -57,15 +63,15 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
         if (!weekly[dayKey]) weekly[dayKey] = [];
 
         weekly[dayKey].push({
-          id: `live-${index}-${item.title}-${item.country}-${item.date}`.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          id: `live-${index}-${item.country || 'USD'}-${item.date}`.toLowerCase().replace(/[^a-z0-9]/g, '-'),
           date: dayKey,
           time: timeStr,
           currency: item.country || 'USD',
           event: item.title || 'Market Event',
           impact: mapImpact(item.impact),
-          actual: item.actual?.toString().trim() || undefined,
-          forecast: item.forecast?.toString().trim() || undefined,
-          previous: item.previous?.toString().trim() || undefined,
+          actual: item.actual ? item.actual.toString().trim() : undefined,
+          forecast: item.forecast ? item.forecast.toString().trim() : undefined,
+          previous: item.previous ? item.previous.toString().trim() : undefined,
         });
       } catch (e) {
         // Skip malformed entries

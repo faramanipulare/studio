@@ -38,7 +38,7 @@ export default function Home() {
       if (dates.length > 0) {
         setWeeklyData(data);
         const todayStr = new Date().toISOString().split('T')[0];
-        // If today is in the feed, select it, otherwise first day
+        // Select today or first available day
         if (dates.includes(todayStr)) {
           setSelectedDate(todayStr);
         } else {
@@ -106,7 +106,7 @@ export default function Home() {
               </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-3xl overflow-hidden">
-              <div className="h-full overflow-hidden">
+              <div className="h-full overflow-hidden notranslate" translate="no">
                 <AISidebar 
                   selectedDayEvents={selectedDayEvents} 
                   selectedDate={selectedDate} 
@@ -118,7 +118,7 @@ export default function Home() {
         </div>
 
         {/* Desktop Sidebar */}
-        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[420px] overflow-hidden">
+        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[420px] overflow-hidden notranslate" translate="no">
           <AISidebar 
             selectedDayEvents={selectedDayEvents} 
             selectedDate={selectedDate} 
@@ -126,7 +126,7 @@ export default function Home() {
           />
         </div>
 
-        {/* Main Feed - Protected from translation-induced crashes */}
+        {/* Main Feed - Protected from DOM corruption by Google Translate */}
         <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden notranslate" translate="no">
           <div className="p-4 lg:p-6 pb-2 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
