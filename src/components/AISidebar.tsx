@@ -23,16 +23,15 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   const [loadingWeekly, setLoadingWeekly] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
 
-  // Weekly Analysis
+  // Weekly Analysis - Updates when weekly data changes
   useEffect(() => {
     async function fetchWeekly() {
       if (!weeklyEvents || weeklyEvents.length === 0) return;
       setLoadingWeekly(true);
       try {
-        // Send actual weekly events for real analysis
         const result = await getWeeklyMarketOverview({ 
           weekRange: 'Current Trading Week',
-          events: weeklyEvents.slice(0, 40).map(e => ({
+          events: weeklyEvents.slice(0, 50).map(e => ({
             date: e.date,
             currency: e.currency,
             event: e.event,
@@ -41,7 +40,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
         });
         setWeeklyOverview(result);
       } catch (err) {
-        console.warn('Weekly IQ Delay');
+        console.warn('AI Weekly Narrative Sync Delay');
       } finally {
         setLoadingWeekly(false);
       }
@@ -49,7 +48,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
     fetchWeekly();
   }, [weeklyEvents]);
 
-  // Daily Analysis based on selected date
+  // Daily Analysis - Updates when selected date or day events change
   useEffect(() => {
     async function fetchDaily() {
       if (!selectedDate || !selectedDayEvents || selectedDayEvents.length === 0) {
@@ -72,7 +71,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
         });
         setDailyAnalysis(result);
       } catch (err) {
-        console.warn('Daily IQ Delay');
+        console.warn('AI Daily IQ Sync Delay');
       } finally {
         setLoadingDaily(false);
       }
@@ -90,7 +89,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#1F1C21] overflow-hidden">
+    <div className="flex flex-col h-full bg-[#1F1C21] overflow-hidden notranslate" translate="no">
       <div className="p-4 border-b border-white/5 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
@@ -108,12 +107,13 @@ export const AISidebar: React.FC<AISidebarProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6 pb-32">
+        {/* Weekly Narrative */}
         <Card className="bg-white/[0.02] border-white/5 overflow-hidden shadow-2xl">
           <CardHeader className="pb-3 border-b border-white/5">
             <div className="flex justify-between items-center">
               <CardTitle className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Weekly Narrative</CardTitle>
               <div className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-black text-[9px]">
-                {loadingWeekly ? '...' : `ACTIVE`}
+                {loadingWeekly ? 'SYNCING...' : `ACTIVE`}
               </div>
             </div>
           </CardHeader>
@@ -122,12 +122,12 @@ export const AISidebar: React.FC<AISidebarProps> = ({
               {loadingWeekly ? (
                 <div className="flex items-center justify-center py-4 gap-3 text-white/40">
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  <span className="text-[10px] uppercase font-black tracking-widest">Processing...</span>
+                  <span className="text-[10px] uppercase font-black tracking-widest">Synthesizing...</span>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <p className="text-xs text-white/80 leading-relaxed font-medium italic">
-                    {weeklyOverview?.overview || "Monitoring institutional sentiment clusters for expansion..."}
+                    {weeklyOverview?.overview || "Waiting for market data synchronization..."}
                   </p>
                   {weeklyOverview?.keyEvents && (
                     <div className="pt-2 border-t border-white/5">
@@ -145,6 +145,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           </CardContent>
         </Card>
 
+        {/* Daily Session IQ */}
         <Card className="bg-white/[0.02] border-white/5 overflow-hidden shadow-2xl">
           <CardHeader className="pb-3 border-b border-white/5">
             <div className="flex justify-between items-center">
@@ -156,7 +157,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
             {loadingDaily ? (
               <div className="flex flex-col items-center justify-center py-12 space-y-4">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/40">Synthesizing...</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/40">Analyzing Session...</p>
               </div>
             ) : dailyAnalysis ? (
               <>
@@ -167,7 +168,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="text-[9px] font-black text-primary uppercase tracking-widest">Liquidity Zones</h4>
+                  <h4 className="text-[9px] font-black text-primary uppercase tracking-widest">Session Volatility Factors</h4>
                   <div className="grid grid-cols-1 gap-2">
                     {dailyAnalysis.keyFactors.map((factor, i) => (
                       <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
@@ -180,7 +181,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
               </>
             ) : (
               <div className="text-center py-12 text-white/10">
-                <p className="text-[10px] font-black uppercase tracking-widest">Select a session for analysis</p>
+                <p className="text-[10px] font-black uppercase tracking-widest">Select a day with events for session analysis</p>
               </div>
             )}
           </CardContent>

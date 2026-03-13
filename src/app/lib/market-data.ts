@@ -1,8 +1,8 @@
 'use server';
 
 /**
- * @fileOverview Institutional market data fetcher - REAL LIVE VERSION.
- * Fetches live data from ForexFactory source with ZERO caching and strict mapping.
+ * @fileOverview Institutional market data fetcher - LIVE VERSION.
+ * Fetches real-time data from ForexFactory source with strict cache bypassing.
  */
 
 export type EconomicEvent = {
@@ -19,7 +19,7 @@ export type EconomicEvent = {
 
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   const timestamp = Date.now();
-  // ForexFactory live JSON feed for the current week
+  // Using a robust URL with timestamp to force fresh data from source
   const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?v=${timestamp}`;
 
   try {
@@ -28,27 +28,16 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       headers: {
         'Pragma': 'no-cache',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Expires': '0',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Institutional-Bridge/1.2'
+        'Expires': '0'
       },
     });
 
-    if (!response.ok) {
-      console.error('INSTITUTIONAL FEED OFFLINE:', response.status);
-      return {};
-    }
+    if (!response.ok) return {};
 
     const rawData = await response.json();
     if (!Array.isArray(rawData)) return {};
 
     const weekly: Record<string, EconomicEvent[]> = {};
-    
-    // Get start of current week in Bucharest
-    const now = new Date();
-    const currentDay = now.getDay(); // 0 is Sunday, 1 is Monday...
-    const diffToMonday = now.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
-    const mondayDate = new Date(now.setDate(diffToMonday));
-    mondayDate.setHours(0, 0, 0, 0);
 
     rawData.forEach((item: any, index: number) => {
       try {
@@ -74,10 +63,9 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
           currency: item.country || 'USD',
           event: item.title || 'Market Event',
           impact: mapImpact(item.impact),
-          // Mapping real values directly from feed properties
-          actual: item.actual && item.actual.toString().trim() !== "" ? item.actual.toString().trim() : undefined,
-          forecast: item.forecast && item.forecast.toString().trim() !== "" ? item.forecast.toString().trim() : undefined,
-          previous: item.previous && item.previous.toString().trim() !== "" ? item.previous.toString().trim() : undefined,
+          actual: item.actual?.toString().trim() || undefined,
+          forecast: item.forecast?.toString().trim() || undefined,
+          previous: item.previous?.toString().trim() || undefined,
         });
       } catch (e) {
         // Skip malformed entries
@@ -91,7 +79,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
 
     return weekly;
   } catch (error) {
-    console.error("CRITICAL SYNC ERROR:", error);
+    console.error("INSTITUTIONAL SYNC ERROR:", error);
     return {};
   }
 }

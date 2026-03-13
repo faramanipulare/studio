@@ -38,18 +38,17 @@ export default function Home() {
       if (dates.length > 0) {
         setWeeklyData(data);
         const todayStr = new Date().toISOString().split('T')[0];
+        // If today is in the feed, select it, otherwise first day
         if (dates.includes(todayStr)) {
           setSelectedDate(todayStr);
-        } else if (!selectedDate || !dates.includes(selectedDate)) {
+        } else {
           setSelectedDate(dates[0]);
         }
       } else {
-        setWeeklyData({});
-        setError("No scheduled events returned from the institutional feed.");
+        setError("Institutional feed currently unavailable.");
       }
     } catch (err: any) {
-      console.error("Live Sync Error (Handled):", err.message);
-      setError("Failed to synchronize with global markets.");
+      setError("Failed to synchronize market data.");
     } finally {
       setLoading(false);
     }
@@ -57,8 +56,7 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    // Auto-refresh every 5 minutes for live Actual data
-    const interval = setInterval(loadData, 300000);
+    const interval = setInterval(loadData, 300000); // 5 min sync
     return () => clearInterval(interval);
   }, []);
 
@@ -80,27 +78,22 @@ export default function Home() {
 
   if (loading && Object.keys(weeklyData).length === 0) {
     return (
-      <div className="flex flex-col min-h-screen bg-[#1F1C21] text-foreground font-body">
+      <div className="flex flex-col min-h-screen bg-[#1F1C21] text-foreground">
         <Header />
         <main className="flex-1 flex flex-col items-center justify-center gap-4">
           <Loader2 className="w-12 h-12 text-primary animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">
-            Establishing Institutional Bridge...
-          </p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Establishing Bridge...</p>
         </main>
       </div>
     );
   }
 
   return (
-    <div 
-      className="flex flex-col h-screen bg-[#1F1C21] text-foreground font-body overflow-hidden notranslate" 
-      translate="no"
-    >
+    <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground font-body overflow-hidden">
       <Header />
       
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* Mobile AI Analysis Trigger */}
+        {/* Mobile AI Analysis */}
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 flex items-center justify-between shrink-0">
            <div className="flex items-center gap-2">
             <BrainCircuit className="w-5 h-5 text-primary" />
@@ -113,7 +106,6 @@ export default function Home() {
               </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-3xl overflow-hidden">
-              <div className="w-12 h-1 bg-white/10 rounded-full mx-auto my-4" />
               <div className="h-full overflow-hidden">
                 <AISidebar 
                   selectedDayEvents={selectedDayEvents} 
@@ -134,14 +126,14 @@ export default function Home() {
           />
         </div>
 
-        {/* Main Feed - Protected from Translation */}
+        {/* Main Feed - Protected from translation-induced crashes */}
         <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden notranslate" translate="no">
           <div className="p-4 lg:p-6 pb-2 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.2em]">
                   <Activity className="w-3 h-3 animate-pulse" />
-                  Live Sync: {Object.keys(weeklyData).length > 0 ? 'Nominal' : 'Connecting...'}
+                  Live Sync: Nominal
                 </div>
                 <h2 className="text-xl lg:text-2xl font-black tracking-tight text-white uppercase">
                   Session Feed
@@ -182,8 +174,8 @@ export default function Home() {
             </div>
 
             {/* Date Selector */}
-            <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-7 gap-2 mt-4">
-              {Object.keys(weeklyData).sort().map((dateStr) => {
+            <div className="grid grid-cols-5 lg:grid-cols-7 gap-2 mt-4">
+              {Object.keys(weeklyData).sort().slice(0, 7).map((dateStr) => {
                 const date = parseISO(dateStr);
                 const isSelected = selectedDate === dateStr;
                 return (
@@ -206,6 +198,7 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Table Container - Protected from Translation */}
           <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32 custom-scrollbar">
             <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
               <div className="overflow-x-auto">
@@ -250,9 +243,6 @@ export default function Home() {
                 <div className="py-20 text-center text-rose-500/50 flex flex-col items-center gap-4">
                   <AlertCircle className="w-12 h-12 opacity-30" />
                   <p className="text-[10px] font-black uppercase tracking-widest">{error}</p>
-                  <Button variant="ghost" size="sm" onClick={loadData} className="text-[9px] font-black uppercase hover:bg-white/5">
-                    Retry Synchronization
-                  </Button>
                 </div>
               )}
             </div>

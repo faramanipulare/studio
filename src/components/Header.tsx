@@ -19,50 +19,33 @@ export function Header() {
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     
-    // Google Translate Initialization
+    // Inject Google Translate script only once
+    if (!document.getElementById('google-translate-script')) {
+      const script = document.createElement('script');
+      script.id = 'google-translate-script';
+      script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+
     window.googleTranslateElementInit = () => {
-      if (!window.google?.translate?.TranslateElement) return;
-      new window.google.translate.TranslateElement(
-        { 
-          pageLanguage: 'en', 
+      if (window.google && window.google.translate) {
+        new window.google.translate.TranslateElement({
+          pageLanguage: 'en',
           includedLanguages: 'ro,en',
-          layout: window.google.translate.TranslateElement.InlineLayout?.SIMPLE,
-          autoDisplay: false 
-        }, 
-        'google_translate_element'
-      );
+          autoDisplay: false
+        }, 'google_translate_element');
+      }
     };
-
-    const scriptId = 'google-translate-script';
-    if (!document.getElementById(scriptId)) {
-      const s = document.createElement('script');
-      s.id = scriptId;
-      s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-      s.async = true;
-      document.body.appendChild(s);
-    }
-
-    // Ensure we start in English if no cookie is set
-    const cookies = document.cookie.split(';');
-    const hasTrans = cookies.some(c => c.trim().startsWith('googtrans='));
-    if (!hasTrans) {
-      document.cookie = "googtrans=/en/en; path=/";
-    }
 
     return () => clearInterval(timer);
   }, []);
 
   const changeLanguage = (lang: 'ro' | 'en') => {
-    try {
-      const domain = window.location.hostname;
-      // Set the standard Google Translate cookie
-      document.cookie = `googtrans=/en/${lang}; domain=${domain}; path=/`;
-      document.cookie = `googtrans=/en/${lang}; path=/`;
-      // Reload is necessary to force the translation engine to update and React to re-hydrate properly
-      window.location.reload();
-    } catch (err) {
-      console.error("Translation switch failed", err);
-    }
+    const domain = window.location.hostname;
+    document.cookie = `googtrans=/en/${lang}; domain=${domain}; path=/`;
+    document.cookie = `googtrans=/en/${lang}; path=/`;
+    window.location.reload();
   };
 
   const toggleRadio = () => {
@@ -86,7 +69,6 @@ export function Header() {
 
   return (
     <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/90 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between notranslate" translate="no">
-      {/* Hidden container for Google Translate widget */}
       <div id="google_translate_element" className="hidden"></div>
       
       <div className="flex items-center gap-3 lg:gap-5">
@@ -110,12 +92,10 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3 lg:gap-8">
-        {/* Language Switcher Buttons */}
-        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10 shadow-inner">
+        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
           <button 
             onClick={() => changeLanguage('ro')}
-            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 active:scale-95 transition-all shadow-lg border border-white/10 cursor-pointer"
-            title="Traducere în Română"
+            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-all border border-white/10"
           >
             <svg viewBox="0 0 3 2" className="w-full h-full">
               <rect width="1" height="2" fill="#002B7F"/><rect width="1" height="2" x="1" fill="#FCD116"/><rect width="1" height="2" x="2" fill="#CE1126"/>
@@ -123,8 +103,7 @@ export function Header() {
           </button>
           <button 
             onClick={() => changeLanguage('en')}
-            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 active:scale-95 transition-all shadow-lg border border-white/10 cursor-pointer"
-            title="Translate to English"
+            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-all border border-white/10"
           >
              <svg viewBox="0 0 60 30" className="w-full h-full">
               <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
@@ -137,7 +116,6 @@ export function Header() {
           </button>
         </div>
 
-        {/* Radio Control */}
         <button 
           onClick={toggleRadio}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
@@ -149,8 +127,8 @@ export function Header() {
           {isPlaying ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
         </button>
 
-        <div className="hidden sm:flex flex-col items-end min-w-[80px] lg:min-w-[140px]">
-          <div className="flex items-center text-[8px] lg:text-[9px] font-black text-muted-foreground gap-1.5 tracking-widest uppercase">
+        <div className="hidden sm:flex flex-col items-end min-w-[140px]">
+          <div className="flex items-center text-[9px] font-black text-muted-foreground gap-1.5 tracking-widest uppercase">
             <Clock className="w-2.5 h-2.5 text-primary" />
             <span>BUCHAREST TIME</span>
           </div>
