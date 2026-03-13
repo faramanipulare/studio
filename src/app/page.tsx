@@ -38,10 +38,12 @@ export default function Home() {
       if (dates.length > 0) {
         setWeeklyData(data);
         const todayStr = new Date().toISOString().split('T')[0];
-        if (dates.includes(todayStr)) {
-          setSelectedDate(todayStr);
-        } else {
-          setSelectedDate(dates[0]);
+        if (selectedDate === null) {
+          if (dates.includes(todayStr)) {
+            setSelectedDate(todayStr);
+          } else {
+            setSelectedDate(dates[0]);
+          }
         }
       } else {
         setError("Institutional feed currently unavailable.");
@@ -55,8 +57,7 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    // Refresh every 2 minutes for latest Actuals
-    const interval = setInterval(loadData, 120000);
+    const interval = setInterval(loadData, 60000); // Sync every minute
     return () => clearInterval(interval);
   }, []);
 
@@ -92,12 +93,7 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground font-body overflow-hidden">
       <Header />
       
-      {/* 
-          CRITICAL: Apply notranslate and translate="no" to the main data area.
-          This prevents Google Translate from breaking React's virtual DOM
-          when it modifies text nodes during translation.
-      */}
-      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative notranslate" translate="no">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         
         {/* Mobile AI Analysis */}
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 flex items-center justify-between shrink-0">
@@ -142,7 +138,7 @@ export default function Home() {
                 <h2 className="text-xl lg:text-2xl font-black tracking-tight text-white uppercase">
                   Session Feed
                   <span className="text-white/20 mx-2">/</span>
-                  <span className="text-white/40 text-sm font-medium tracking-normal">
+                  <span className="text-white/40 text-sm font-medium tracking-normal notranslate" translate="no">
                     {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMM d') : 'Live...'}
                   </span>
                 </h2>
@@ -177,7 +173,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-5 lg:grid-cols-7 gap-2 mt-4">
+            <div className="grid grid-cols-5 lg:grid-cols-7 gap-2 mt-4 notranslate" translate="no">
               {Object.keys(weeklyData).sort().slice(0, 7).map((dateStr) => {
                 const date = parseISO(dateStr);
                 const isSelected = selectedDate === dateStr;
@@ -217,15 +213,15 @@ export default function Home() {
                   <tbody className="divide-y divide-white/[0.03]">
                     {filteredEvents.map((event) => (
                       <tr key={event.id} className="hover:bg-white/5 transition-colors group">
-                        <td className="px-6 py-5 font-mono text-xs text-white/80">{event.time}</td>
-                        <td className="px-6 py-5 font-bold text-xs text-white">{event.currency}</td>
-                        <td className="px-6 py-5 font-bold text-xs text-white/90 truncate max-w-[200px]">{event.event}</td>
+                        <td className="px-6 py-5 font-mono text-xs text-white/80 notranslate" translate="no">{event.time}</td>
+                        <td className="px-6 py-5 font-bold text-xs text-white notranslate" translate="no">{event.currency}</td>
+                        <td className="px-6 py-5 font-bold text-xs text-white/90 truncate max-w-[200px] notranslate" translate="no">{event.event}</td>
                         <td className="px-6 py-5 text-center">
-                          <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/40'}`}>
-                            {event.impact === 'High' ? 'HIGH' : 'LOW'}
+                          <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/40'} notranslate`} translate="no">
+                            {event.impact === 'High' ? 'HIGH' : event.impact.toUpperCase()}
                           </span>
                         </td>
-                        <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold whitespace-nowrap">
+                        <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold whitespace-nowrap notranslate" translate="no">
                           {event.actual || <span className="text-white/10">--</span>}
                         </td>
                       </tr>

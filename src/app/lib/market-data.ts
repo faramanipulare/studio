@@ -65,9 +65,9 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
         currency: item.country || 'USD',
         event: item.title || 'Market Event',
         impact: mapImpact(item.impact),
-        actual: item.actual?.toString().trim() || undefined,
-        forecast: item.forecast?.toString().trim() || undefined,
-        previous: item.previous?.toString().trim() || undefined,
+        actual: item.actual?.toString() || undefined,
+        forecast: item.forecast?.toString() || undefined,
+        previous: item.previous?.toString() || undefined,
       });
     });
 

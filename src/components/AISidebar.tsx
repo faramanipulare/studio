@@ -31,7 +31,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
       try {
         const result = await getWeeklyMarketOverview({ 
           weekRange: 'Current Trading Week',
-          events: weeklyEvents.slice(0, 40).map(e => ({
+          events: weeklyEvents.slice(0, 50).map(e => ({
             date: e.date,
             currency: e.currency,
             event: e.event,
@@ -89,7 +89,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#1F1C21] overflow-hidden notranslate" translate="no">
+    <div className="flex flex-col h-full bg-[#1F1C21] overflow-hidden">
       <div className="p-4 border-b border-white/5 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
@@ -100,7 +100,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
             <p className="text-[8px] text-primary font-black uppercase mt-0.5 tracking-widest">LIVE SMC FEED</p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10">
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10 notranslate" translate="no">
           <ShieldCheck className="w-3 h-3 text-primary" />
           <span className="text-[8px] font-black text-white/40 uppercase tracking-tighter">SECURE</span>
         </div>
@@ -112,7 +112,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           <CardHeader className="pb-3 border-b border-white/5">
             <div className="flex justify-between items-center">
               <CardTitle className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Weekly Narrative</CardTitle>
-              <div className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-black text-[9px]">
+              <div className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-black text-[9px] notranslate" translate="no">
                 {loadingWeekly ? 'SYNCING...' : `ACTIVE`}
               </div>
             </div>
