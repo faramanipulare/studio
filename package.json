@@ -1,6 +1,7 @@
+
 {
   "name": "fara-manipulare",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

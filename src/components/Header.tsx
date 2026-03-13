@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -56,17 +57,11 @@ export function Header() {
     try {
       const domain = window.location.hostname;
       // Set Google Translate cookie for the chosen language
+      // The format is /source_lang/target_lang
       document.cookie = `googtrans=/en/${lang}; domain=${domain}; path=/`;
       document.cookie = `googtrans=/en/${lang}; path=/`;
       
-      // Attempt to trigger the widget selector if already loaded
-      const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-      if (combo) {
-        combo.value = lang;
-        combo.dispatchEvent(new Event('change'));
-      }
-      
-      // Reload is safest for React applications to prevent DOM mutation errors
+      // Reload is the ONLY way to ensure Next.js and Google Translate don't fight over the DOM
       window.location.reload();
     } catch (err) {
       console.error("Translation switch failed", err);

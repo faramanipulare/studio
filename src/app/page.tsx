@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -30,11 +31,11 @@ export default function Home() {
     setLoading(true);
     try {
       const data = await fetchWeeklyEvents();
-      setWeeklyData(data);
-      
-      const dates = Object.keys(data).sort();
-      if (dates.length > 0) {
-        // Find today or first available
+      if (Object.keys(data).length > 0) {
+        setWeeklyData(data);
+        
+        const dates = Object.keys(data).sort();
+        // Default to today if possible
         const todayStr = new Date().toISOString().split('T')[0];
         if (dates.includes(todayStr)) {
           setSelectedDate(todayStr);
