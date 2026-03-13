@@ -26,12 +26,11 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       headers: {
         'Pragma': 'no-cache',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-      },
-      next: { revalidate: 0 }
+      }
     });
 
     if (!response.ok) {
-      throw new Error(`FF Feed HTTP Error: ${response.status}`);
+      throw new Error(`FF Feed Error: ${response.status}`);
     }
 
     const rawData = await response.json();
@@ -45,7 +44,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       const eventDate = new Date(item.date);
       const dayKey = eventDate.toISOString().split('T')[0];
 
-      // Bucharest (GMT+2/3) Time Format
+      // Bucharest Time Formatting
       const timeStr = new Intl.DateTimeFormat('en-GB', { 
         timeZone: 'Europe/Bucharest', 
         hour: '2-digit', 

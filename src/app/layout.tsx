@@ -13,11 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-      </head>
-      <body className="font-body antialiased selection:bg-primary/30 selection:text-primary-foreground min-h-screen bg-background overflow-x-hidden" suppressHydrationWarning>
+      <body className="antialiased selection:bg-primary/30 selection:text-primary-foreground min-h-screen bg-background overflow-x-hidden" suppressHydrationWarning>
         {children}
       </body>
     </html>

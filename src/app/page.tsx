@@ -42,22 +42,20 @@ export default function Home() {
           const todayStr = new Date().toISOString().split('T')[0];
           setSelectedDate(dates.includes(todayStr) ? todayStr : dates[0]);
         }
-      } else if (Object.keys(weeklyData).length === 0) {
+      } else {
         setError("Institutional feed temporarily synchronized. Check connection.");
       }
     } catch (err: any) {
-      if (Object.keys(weeklyData).length === 0) {
-        setError("Failed to synchronize market data.");
-      }
+      setError("Failed to synchronize market data.");
     } finally {
       setLoading(false);
     }
-  }, [selectedDate, weeklyData]);
+  }, [selectedDate]);
 
   useEffect(() => {
     setIsMounted(true);
     loadData(true);
-    const interval = setInterval(() => loadData(false), 60000); 
+    const interval = setInterval(() => loadData(false), 30000); 
     return () => clearInterval(interval);
   }, [loadData]);
 
@@ -80,10 +78,10 @@ export default function Home() {
   if (!isMounted) return null;
 
   return (
-    <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground font-body overflow-hidden w-full">
+    <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground overflow-hidden w-full" suppressHydrationWarning>
       <Header />
       
-      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative w-full">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative w-full notranslate" translate="no">
         
         {/* Mobile AI Analysis */}
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 flex items-center justify-between shrink-0">
@@ -98,26 +96,22 @@ export default function Home() {
               </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-3xl overflow-hidden">
-              <div className="notranslate h-full" translate="no">
-                <AISidebar 
-                  selectedDayEvents={selectedDayEvents} 
-                  selectedDate={selectedDate} 
-                  weeklyEvents={allWeeklyEvents}
-                />
-              </div>
+              <AISidebar 
+                selectedDayEvents={selectedDayEvents} 
+                selectedDate={selectedDate} 
+                weeklyEvents={allWeeklyEvents}
+              />
             </SheetContent>
           </Sheet>
         </div>
 
         {/* Sidebar Container */}
-        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[400px] overflow-hidden bg-[#1F1C21]">
-          <div className="notranslate h-full" translate="no">
-            <AISidebar 
-              selectedDayEvents={selectedDayEvents} 
-              selectedDate={selectedDate} 
-              weeklyEvents={allWeeklyEvents}
-            />
-          </div>
+        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[380px] overflow-hidden bg-[#1F1C21]">
+          <AISidebar 
+            selectedDayEvents={selectedDayEvents} 
+            selectedDate={selectedDate} 
+            weeklyEvents={allWeeklyEvents}
+          />
         </div>
 
         {/* Main Feed - FULL WIDTH FIX */}
@@ -167,7 +161,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-5 lg:grid-cols-7 gap-2 mt-4 notranslate" translate="no">
+            <div className="grid grid-cols-5 lg:grid-cols-7 gap-2 mt-4">
               {Object.keys(weeklyData).sort().slice(0, 7).map((dateStr) => {
                 const date = parseISO(dateStr);
                 const isSelected = selectedDate === dateStr;
@@ -204,7 +198,7 @@ export default function Home() {
                   <p className="text-sm font-black uppercase tracking-widest">{error}</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto w-full notranslate" translate="no">
+                <div className="overflow-x-auto w-full">
                   <table className="w-full text-left border-collapse min-w-[800px]">
                     <thead>
                       <tr className="border-b border-white/5 bg-white/[0.02]">
@@ -219,7 +213,7 @@ export default function Home() {
                     <tbody className="divide-y divide-white/[0.03]">
                       {filteredEvents.map((event) => (
                         <tr key={event.id} className="hover:bg-white/5 transition-colors group">
-                          <td className="px-6 py-5 font-mono text-xs text-white/80">{event.time}</td>
+                          <td className="px-6 py-5 font-mono text-xs text-white/80 tabular-nums">{event.time}</td>
                           <td className="px-6 py-5 font-bold text-xs text-white">{event.currency}</td>
                           <td className="px-6 py-5 font-bold text-xs text-white/90 truncate max-w-[300px]">{event.event}</td>
                           <td className="px-6 py-5 text-center">
@@ -227,10 +221,10 @@ export default function Home() {
                               {event.impact === 'High' ? 'HIGH' : event.impact.toUpperCase()}
                             </span>
                           </td>
-                          <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold">
+                          <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold tabular-nums">
                             {event.actual || <span className="text-white/10">--</span>}
                           </td>
-                          <td className="px-6 py-5 text-right font-mono text-xs text-white/40">
+                          <td className="px-6 py-5 text-right font-mono text-xs text-white/40 tabular-nums">
                             {event.forecast || <span className="text-white/10">--</span>}
                           </td>
                         </tr>

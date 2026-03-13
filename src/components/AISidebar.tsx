@@ -23,7 +23,6 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   const [loadingWeekly, setLoadingWeekly] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
 
-  // Weekly Narrative Sync
   useEffect(() => {
     async function fetchWeekly() {
       if (!weeklyEvents || weeklyEvents.length === 0) return;
@@ -48,7 +47,6 @@ export const AISidebar: React.FC<AISidebarProps> = ({
     fetchWeekly();
   }, [weeklyEvents]);
 
-  // Daily Analysis Sync
   useEffect(() => {
     async function fetchDaily() {
       if (!selectedDate || !selectedDayEvents || selectedDayEvents.length === 0) {
@@ -89,7 +87,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#1F1C21] overflow-hidden">
+    <div className="flex flex-col h-full bg-[#1F1C21] overflow-hidden notranslate" translate="no">
       <div className="p-4 border-b border-white/5 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
@@ -100,19 +98,18 @@ export const AISidebar: React.FC<AISidebarProps> = ({
             <p className="text-[8px] text-primary font-black uppercase mt-0.5 tracking-widest">LIVE SMC FEED</p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10 notranslate" translate="no">
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10">
           <ShieldCheck className="w-3 h-3 text-primary" />
           <span className="text-[8px] font-black text-white/40 uppercase tracking-tighter">SECURE</span>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6 pb-32">
-        {/* Weekly Narrative */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-32">
         <Card className="bg-white/[0.02] border-white/5 overflow-hidden shadow-2xl">
           <CardHeader className="pb-3 border-b border-white/5">
             <div className="flex justify-between items-center">
               <CardTitle className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Weekly Narrative</CardTitle>
-              <div className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-black text-[9px] notranslate" translate="no">
+              <div className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-black text-[9px]">
                 {loadingWeekly ? 'SYNCING...' : `ACTIVE`}
               </div>
             </div>
@@ -145,7 +142,6 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           </CardContent>
         </Card>
 
-        {/* Daily Session IQ */}
         <Card className="bg-white/[0.02] border-white/5 overflow-hidden shadow-2xl">
           <CardHeader className="pb-3 border-b border-white/5">
             <div className="flex justify-between items-center">
