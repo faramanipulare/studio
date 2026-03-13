@@ -2,7 +2,6 @@
 
 /**
  * @fileOverview Institutional market data fetcher - 100% REAL TIME.
- * Fetches data from ForexFactory source with strict cache bypassing.
  */
 
 export type EconomicEvent = {
@@ -47,7 +46,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       const eventDate = new Date(item.date);
       const dayKey = eventDate.toISOString().split('T')[0];
 
-      // Format time for Bucharest (EET/EEST)
+      // Bucharest Time Formatting
       const timeStr = new Intl.DateTimeFormat('en-GB', { 
         timeZone: 'Europe/Bucharest', 
         hour: '2-digit', 

@@ -45,8 +45,8 @@ export default function Home() {
       
       if (dates.length > 0) {
         setWeeklyData(data);
-        const todayStr = new Date().toISOString().split('T')[0];
         if (selectedDate === null) {
+          const todayStr = new Date().toISOString().split('T')[0];
           if (dates.includes(todayStr)) {
             setSelectedDate(todayStr);
           } else {
@@ -97,7 +97,7 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground font-body overflow-hidden">
       <Header />
       
-      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative w-full">
         
         {/* Mobile AI Analysis */}
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 flex items-center justify-between shrink-0">
@@ -122,7 +122,7 @@ export default function Home() {
         </div>
 
         {/* Sidebar Container */}
-        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[420px] overflow-hidden">
+        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[400px] overflow-hidden">
           <AISidebar 
             selectedDayEvents={selectedDayEvents} 
             selectedDate={selectedDate} 
@@ -130,8 +130,8 @@ export default function Home() {
           />
         </div>
 
-        {/* Main Feed */}
-        <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden" translate="no" className="notranslate">
+        {/* Main Feed - FULL WIDTH FIX */}
+        <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden w-full">
           <div className="p-4 lg:p-6 pb-2 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
               <div className="space-y-1">
@@ -217,15 +217,15 @@ export default function Home() {
                   <tbody className="divide-y divide-white/[0.03]">
                     {filteredEvents.map((event) => (
                       <tr key={event.id} className="hover:bg-white/5 transition-colors group">
-                        <td className="px-6 py-5 font-mono text-xs text-white/80 notranslate" translate="no">{event.time}</td>
-                        <td className="px-6 py-5 font-bold text-xs text-white notranslate" translate="no">{event.currency}</td>
-                        <td className="px-6 py-5 font-bold text-xs text-white/90 truncate max-w-[200px]">{event.event}</td>
+                        <td className="px-6 py-5 font-mono text-xs text-white/80" translate="no">{event.time}</td>
+                        <td className="px-6 py-5 font-bold text-xs text-white" translate="no">{event.currency}</td>
+                        <td className="px-6 py-5 font-bold text-xs text-white/90">{event.event}</td>
                         <td className="px-6 py-5 text-center">
-                          <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/40'} notranslate`} translate="no">
+                          <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/40'}`} translate="no">
                             {event.impact === 'High' ? 'HIGH' : event.impact.toUpperCase()}
                           </span>
                         </td>
-                        <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold whitespace-nowrap notranslate" translate="no">
+                        <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold whitespace-nowrap" translate="no">
                           {event.actual || <span className="text-white/10">--</span>}
                         </td>
                       </tr>

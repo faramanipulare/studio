@@ -12,7 +12,7 @@ export function Header() {
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     
-    // Google Translate Initialization with explicit HTTPS to avoid CORB
+    // Improved Google Translate Initialization
     if (!document.getElementById('google-translate-script')) {
       const script = document.createElement('script');
       script.id = 'google-translate-script';
@@ -63,7 +63,7 @@ export function Header() {
   }).format(time) : '--:--:--';
 
   return (
-    <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/90 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
+    <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/90 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between w-full">
       <div id="google_translate_element" className="hidden"></div>
       
       <div className="flex items-center gap-3 lg:gap-5">
@@ -83,7 +83,7 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3 lg:gap-8">
-        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10 notranslate" translate="no">
+        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10" translate="no">
           <button onClick={() => changeLanguage('ro')} className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden border border-white/10 hover:opacity-80 transition-opacity">
             <svg viewBox="0 0 3 2" className="w-full h-full"><rect width="1" height="2" fill="#002B7F"/><rect width="1" height="2" x="1" fill="#FCD116"/><rect width="1" height="2" x="2" fill="#CE1126"/></svg>
           </button>
@@ -97,7 +97,7 @@ export function Header() {
           <span className="text-[9px] font-black uppercase hidden sm:inline">Pescobar FM</span>
         </button>
 
-        <div className="hidden sm:flex flex-col items-end min-w-[140px] notranslate" translate="no">
+        <div className="hidden sm:flex flex-col items-end min-w-[140px]" translate="no">
           <span className="text-[9px] font-black text-muted-foreground tracking-widest uppercase">Bucharest Time</span>
           <span className="text-sm lg:text-lg font-mono font-black text-white">{bucharestTime}</span>
         </div>
