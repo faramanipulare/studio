@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -12,8 +11,7 @@ import {
   Loader2, 
   RefreshCcw, 
   BrainCircuit,
-  CalendarDays,
-  AlertCircle
+  CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,7 +36,6 @@ export default function Home() {
       
       const dates = Object.keys(data).sort();
       if (dates.length > 0) {
-        // Stay on current date if still available, otherwise first date
         if (!selectedDate || !dates.includes(selectedDate)) {
           setSelectedDate(dates[0]);
         }
@@ -127,7 +124,7 @@ export default function Home() {
           />
         </div>
 
-        {/* Main Feed */}
+        {/* Main Feed Container - Enforce notranslate on technical data table */}
         <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden">
           <div className="p-4 lg:p-6 pb-2 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
@@ -198,7 +195,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Table with notranslate class */}
+          {/* Economic Calendar Table - Protected from Google Translate to prevent layout breaks */}
           <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32 custom-scrollbar notranslate">
             <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
               <div className="overflow-x-auto">
@@ -223,7 +220,9 @@ export default function Home() {
                             {event.impact_percentage}%
                           </span>
                         </td>
-                        <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold">{event.actual || '--'}</td>
+                        <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold whitespace-nowrap">
+                          {event.actual ? event.actual : <span className="text-white/10 opacity-50">--</span>}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

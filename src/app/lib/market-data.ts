@@ -1,9 +1,8 @@
-
 'use server';
 
 /**
  * @fileOverview Institutional market data fetcher.
- * Ensures dates are always aligned to the CURRENT trading week.
+ * Ensures dates are strictly aligned to the CURRENT trading week Monday.
  */
 
 export type EconomicEvent = {
@@ -41,11 +40,11 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
 
     const weekly: Record<string, EconomicEvent[]> = {};
     
-    // Determine the start of the CURRENT week (Monday)
+    // Determine the start of the CURRENT week (Monday) strictly
     const now = new Date();
-    const currentDay = now.getDay(); // 0 is Sunday
-    const diff = now.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
-    const monday = new Date(now.setDate(diff));
+    const day = now.getDay(); // 0 is Sunday
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(now.getFullYear(), now.getMonth(), diff);
     monday.setHours(0, 0, 0, 0);
 
     rawData.forEach((item: any) => {
@@ -53,8 +52,13 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
         const dateObj = new Date(item.date);
         const dayKey = dateObj.toISOString().split('T')[0];
 
-        // Only include events from the current week onwards
+        // Only include events from the current week
         if (dateObj < monday) return;
+
+        // Ensure we don't accidentally jump to next week if the feed contains future data
+        const nextMonday = new Date(monday);
+        nextMonday.setDate(monday.getDate() + 7);
+        if (dateObj >= nextMonday) return;
 
         const timeStr = new Intl.DateTimeFormat('en-GB', { 
           timeZone: 'Europe/Bucharest', 
@@ -87,7 +91,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
           currency: item.country || 'USD',
           event: item.title || 'Market Event',
           impact: mapImpact(item.impact),
-          actual: item.actual || undefined,
+          actual: item.actual && item.actual.trim() !== "" ? item.actual : undefined,
           forecast: item.forecast || undefined,
           previous: item.previous || undefined,
           sentiment: sentiment,
@@ -114,11 +118,10 @@ function mapImpact(impact: string): 'Low' | 'Medium' | 'High' | 'Holiday' {
 function generateFallbackData(): Record<string, EconomicEvent[]> {
   const weekly: Record<string, EconomicEvent[]> = {};
   
-  // Find current Monday
-  const now = new Date();
-  const currentDay = now.getDay();
-  const diff = now.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
-  const startDay = new Date(now.setDate(diff));
+  const today = new Date();
+  const day = today.getDay();
+  const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+  const startDay = new Date(today.getFullYear(), today.getMonth(), diff);
 
   for (let i = 0; i < 5; i++) {
     const d = new Date(startDay);
@@ -133,6 +136,7 @@ function generateFallbackData(): Record<string, EconomicEvent[]> {
         currency: 'USD',
         event: 'Institutional Flow Analysis',
         impact: 'High',
+        actual: '0.3%', // Mocking actual for expired fallback data
         forecast: '0.2%',
         sentiment: 'Bullish',
         impact_percentage: 88
