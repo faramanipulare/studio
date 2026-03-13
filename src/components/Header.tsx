@@ -29,24 +29,22 @@ export function Header() {
           { 
             pageLanguage: 'en', 
             includedLanguages: 'ro,en',
-            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-            autoDisplay: false 
+            autoDisplay: false,
+            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
           }, 
           'google_translate_element'
         );
       }
     };
 
-    const addGoogleTranslateScript = () => {
-      if (document.getElementById('google-translate-script')) return;
+    const scriptId = 'google-translate-script';
+    if (!document.getElementById(scriptId)) {
       const script = document.createElement('script');
-      script.id = 'google-translate-script';
-      script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.id = scriptId;
+      script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
       script.async = true;
       document.body.appendChild(script);
-    };
-
-    addGoogleTranslateScript();
+    }
 
     return () => {
       clearInterval(timer);
@@ -59,29 +57,31 @@ export function Header() {
 
   const changeLanguage = (langCode: 'ro' | 'en') => {
     const triggerTranslation = () => {
-      const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-      if (combo) {
-        combo.value = langCode;
-        combo.dispatchEvent(new Event('change'));
+      const selectElement = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+      if (selectElement) {
+        selectElement.value = langCode;
+        selectElement.dispatchEvent(new Event('change'));
+        return true;
       }
+      return false;
     };
 
-    // Robust retry logic for finding the Google Translate combo box
-    let attempts = 0;
-    const maxAttempts = 20; // 10 seconds total (500ms * 20)
-    const checkInterval = setInterval(() => {
-      const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-      if (combo) {
-        triggerTranslation();
-        clearInterval(checkInterval);
-      } else {
+    // Initial attempt
+    if (!triggerTranslation()) {
+      let attempts = 0;
+      const maxAttempts = 60; // 20 seconds polling
+      const pollInterval = setInterval(() => {
+        const success = triggerTranslation();
         attempts++;
-        if (attempts >= maxAttempts) {
-          clearInterval(checkInterval);
-          console.error("Translation widget timed out. Ensure the Google Translate script is loading correctly.");
+        if (success || attempts >= maxAttempts) {
+          if (!success && attempts >= maxAttempts) {
+            console.warn("Translation widget timed out. Trying to re-init container...");
+            // Force a re-render/re-check of the widget container if needed
+          }
+          clearInterval(pollInterval);
         }
-      }
-    }, 500);
+      }, 333);
+    }
   };
 
   const toggleRadio = () => {
@@ -89,7 +89,7 @@ export function Header() {
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch(err => console.warn("Audio interaction required:", err));
+      audioRef.current.play().catch(() => console.warn("User interaction required for audio"));
     }
     setIsPlaying(!isPlaying);
   };
@@ -103,9 +103,9 @@ export function Header() {
   }).format(time) : '--:--:--';
 
   return (
-    <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/80 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
-      {/* Hidden container for Google Translate widget */}
-      <div id="google_translate_element" className="hidden absolute opacity-0"></div>
+    <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/90 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
+      {/* Container for Google Translate - must be in DOM for script to find it */}
+      <div id="google_translate_element" className="fixed -top-full left-0 opacity-0 pointer-events-none"></div>
 
       <div className="flex items-center gap-3 lg:gap-5">
         <div className="relative group shrink-0">
@@ -131,10 +131,10 @@ export function Header() {
         <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
           <button 
             onClick={() => changeLanguage('ro')}
-            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70 cursor-pointer"
             title="Tradu în Română"
           >
-            <svg viewBox="0 0 3 2" className="w-full h-full pointer-events-none">
+            <svg viewBox="0 0 3 2" className="w-full h-full">
               <rect width="1" height="2" fill="#002B7F"/>
               <rect width="1" height="2" x="1" fill="#FCD116"/>
               <rect width="1" height="2" x="2" fill="#CE1126"/>
@@ -142,10 +142,10 @@ export function Header() {
           </button>
           <button 
             onClick={() => changeLanguage('en')}
-            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70 cursor-pointer"
             title="Translate to English"
           >
-             <svg viewBox="0 0 60 30" className="w-full h-full pointer-events-none">
+             <svg viewBox="0 0 60 30" className="w-full h-full">
               <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
               <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/>
               <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="4"/>
@@ -172,7 +172,7 @@ export function Header() {
         <div className="hidden sm:flex flex-col items-end min-w-[80px] lg:min-w-[140px]">
           <div className="flex items-center text-[8px] lg:text-[9px] font-black text-muted-foreground gap-1.5 tracking-widest uppercase">
             <Clock className="w-2.5 h-2.5 text-primary" />
-            <span>GMT+2 BUCHAREST</span>
+            <span>BUCHAREST TIME</span>
           </div>
           <span className="text-sm lg:text-lg font-mono font-black text-white tabular-nums">{bucharestTime}</span>
         </div>

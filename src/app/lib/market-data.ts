@@ -1,8 +1,8 @@
 'use server';
 
 /**
- * @fileOverview Institutional market data fetcher.
- * Strictly live connection, 0-dependency for VPS stability.
+ * @fileOverview Institutional market data fetcher with native Intl conversion.
+ * Strictly dependency-free to ensure stability on VPS environments.
  */
 
 export type EconomicEvent = {
@@ -20,37 +20,27 @@ export type EconomicEvent = {
 };
 
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
-  const t = Date.now();
-  // Using direct institutional feed with strict cache-busting
-  const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?t=${t}`;
+  const timestamp = new Date().getTime();
+  const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?cb=${timestamp}`;
 
   try {
     const response = await fetch(url, {
       cache: 'no-store',
-      next: { revalidate: 0 },
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
-        'Expires': '0'
+        'Expires': '0',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
       }
     });
 
     if (!response.ok) {
-      console.error(`Feed connection failed with status: ${response.status}`);
-      // Throwing error to be caught by the UI loadData try/catch
-      throw new Error(`Market feed unreachable (Status: ${response.status})`);
+      throw new Error(`Institutional Feed Error: HTTP ${response.status}`);
     }
 
     const rawData = await response.json();
     
-    if (!Array.isArray(rawData)) {
-      console.error("Invalid data format received from feed.");
-      throw new Error("Invalid data format received from institutional feed.");
-    }
-
-    if (rawData.length === 0) {
-      console.warn("Feed returned empty array.");
+    if (!Array.isArray(rawData) || rawData.length === 0) {
       throw new Error("No events returned from the institutional feed.");
     }
 
@@ -59,18 +49,26 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     rawData.forEach((item: any) => {
       try {
         const dateObj = new Date(item.date);
-        if (isNaN(dateObj.getTime())) return; // Skip invalid dates
+        if (isNaN(dateObj.getTime())) return;
         
-        // Native Intl for Bucharest time
-        const bucharestDateStr = dateObj.toLocaleDateString('sv-SE', { timeZone: 'Europe/Bucharest' });
-        const timeStr = dateObj.toLocaleTimeString('en-GB', { 
+        const bucharestDateParts = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Europe/Bucharest',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).formatToParts(dateObj);
+        
+        const year = bucharestDateParts.find(p => p.type === 'year')?.value;
+        const month = bucharestDateParts.find(p => p.type === 'month')?.value;
+        const day = bucharestDateParts.find(p => p.type === 'day')?.value;
+        const dayKey = `${year}-${month}-${day}`;
+
+        const timeStr = new Intl.DateTimeFormat('en-GB', { 
           timeZone: 'Europe/Bucharest', 
           hour: '2-digit', 
           minute: '2-digit',
           hour12: false 
-        });
-
-        const dayKey = bucharestDateStr;
+        }).format(dateObj);
 
         if (!weekly[dayKey]) weekly[dayKey] = [];
 
@@ -79,18 +77,18 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
 
         const impactVal = item.impact?.toLowerCase() || '';
         if (impactVal === 'high') {
-          impact_percentage = 85 + (Math.floor(Math.random() * 10));
+          impact_percentage = 80 + Math.floor(Math.random() * 15);
           sentiment = Math.random() > 0.5 ? 'Bullish' : 'Bearish';
         } else if (impactVal === 'medium' || impactVal === 'med') {
-          impact_percentage = 45 + (Math.floor(Math.random() * 15));
+          impact_percentage = 40 + Math.floor(Math.random() * 20);
           sentiment = 'Mixed';
         } else {
-          impact_percentage = 15 + (Math.floor(Math.random() * 15));
+          impact_percentage = 10 + Math.floor(Math.random() * 20);
           sentiment = 'Neutral';
         }
 
         weekly[dayKey].push({
-          id: `${item.title}-${item.date}-${item.country}`.replace(/[^\w]/g, '-').toLowerCase(),
+          id: `${item.title}-${item.date}-${item.country}`.toLowerCase().replace(/[^a-z0-9]/g, '-'),
           date: dayKey,
           time: timeStr,
           currency: item.country || 'USD',
@@ -103,20 +101,18 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
           impact_percentage: impact_percentage
         });
       } catch (e) {
-        // Skip invalid items
+        // Silent skip for corrupted entries
       }
     });
 
-    // Sort events by time
     Object.keys(weekly).forEach(day => {
       weekly[day].sort((a, b) => a.time.localeCompare(b.time));
     });
 
     return weekly;
   } catch (error: any) {
-    console.error("CRITICAL SYNC ERROR:", error.message);
-    // Rethrow to allow the frontend to handle the error state
-    throw error;
+    console.error("Critical Feed Sync Failure:", error.message);
+    throw new Error(error.message || "Failed to synchronize institutional market data.");
   }
 }
 

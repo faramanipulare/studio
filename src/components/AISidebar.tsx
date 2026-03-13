@@ -1,13 +1,11 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect } from 'react';
-import { BrainCircuit, Loader2, TrendingUp, TrendingDown, Minus, Activity, AlertTriangle, ShieldCheck } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+import { BrainCircuit, Loader2, TrendingUp, TrendingDown, Minus, Activity, ShieldCheck } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getWeeklyMarketOverview, type WeeklyOverviewOutput } from '@/ai/flows/ai-weekly-market-overview-flow';
 import { getDailyMarketAnalysis, type DailyAnalysisOutput } from '@/ai/flows/ai-daily-market-analysis-flow';
 import { type EconomicEvent } from '@/app/lib/market-data';
-import { format, parseISO } from 'date-fns';
 
 interface AISidebarProps {
   selectedDayEvents: EconomicEvent[];
@@ -30,10 +28,10 @@ export const AISidebar: React.FC<AISidebarProps> = ({
       if (!weeklyEvents || weeklyEvents.length === 0) return;
       setLoadingWeekly(true);
       try {
-        const result = await getWeeklyMarketOverview({ week: 'Live Trading Week' });
+        const result = await getWeeklyMarketOverview({ week: 'Institutional Flow' });
         setWeeklyOverview(result);
       } catch (err) {
-        console.error('Weekly analysis failure:', err);
+        console.warn('Weekly IQ Delay');
       } finally {
         setLoadingWeekly(false);
       }
@@ -60,7 +58,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
         });
         setDailyAnalysis(result);
       } catch (err) {
-        console.error('Daily analysis failure:', err);
+        console.warn('Daily IQ Delay');
       } finally {
         setLoadingDaily(false);
       }
@@ -78,43 +76,35 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-6 py-6 h-full overflow-y-auto">
-      <div className="flex items-center justify-between shrink-0">
+    <div className="flex flex-col h-full bg-[#1F1C21] overflow-hidden">
+      <div className="p-4 border-b border-white/5 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">
             <BrainCircuit className="w-5 h-5 text-primary" />
           </div>
           <div>
             <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Market Intelligence</h2>
-            <p className="text-[8px] text-primary font-black uppercase mt-0.5">INSTITUTIONAL CORE</p>
+            <p className="text-[8px] text-primary font-black uppercase mt-0.5 tracking-widest">LIVE SMC FEED</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white/5 border border-white/10">
           <ShieldCheck className="w-3 h-3 text-primary" />
-          <span className="text-[8px] font-black text-white/40 uppercase">LIVE FEED</span>
+          <span className="text-[8px] font-black text-white/40 uppercase tracking-tighter">SECURE</span>
         </div>
       </div>
 
-      <div className="space-y-6">
-        <Card className="bg-white/[0.02] border-white/5 overflow-hidden shadow-2xl shrink-0">
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6 pb-32">
+        <Card className="bg-white/[0.02] border-white/5 overflow-hidden shadow-2xl">
           <CardHeader className="pb-3 border-b border-white/5">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Institutional Outlook</CardTitle>
+              <CardTitle className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Weekly Narrative</CardTitle>
               <div className="px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-black text-[9px]">
-                {loadingWeekly ? 'Analyzing...' : `WEEKLY`}
+                {loadingWeekly ? '...' : `ACTIVE`}
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-5 pt-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-[9px] font-black text-muted-foreground uppercase tracking-wider">
-                <span>Sentiment Intensity</span>
-                <span className="text-primary">82%</span>
-              </div>
-              <Progress value={82} className="h-1 bg-white/5" />
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#0c0e14] border border-white/5 relative">
+            <div className="p-4 rounded-xl bg-[#0c0e14] border border-white/5">
               {loadingWeekly ? (
                 <div className="flex items-center justify-center py-4 gap-3 text-white/40">
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
@@ -122,49 +112,25 @@ export const AISidebar: React.FC<AISidebarProps> = ({
                 </div>
               ) : (
                 <p className="text-xs text-white/80 leading-relaxed font-medium italic">
-                  {weeklyOverview?.overview}
+                  {weeklyOverview?.overview || "Monitoring institutional sentiment clusters for expansion..."}
                 </p>
               )}
             </div>
-            
-            {!loadingWeekly && weeklyOverview?.keyEvents && (
-              <div className="space-y-2">
-                <h4 className="text-[9px] font-black text-primary uppercase tracking-widest">Strategic Focus</h4>
-                <div className="grid grid-cols-1 gap-1.5">
-                  {weeklyOverview.keyEvents.map((event, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-white/5 border border-white/5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      <span className="text-[10px] font-bold text-white/70 uppercase leading-tight">{event}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 
-        <Card className="bg-white/[0.02] border-white/5 overflow-hidden shadow-2xl shrink-0">
+        <Card className="bg-white/[0.02] border-white/5 overflow-hidden shadow-2xl">
           <CardHeader className="pb-3 border-b border-white/5">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Session IQ</CardTitle>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black text-[8px] uppercase">
-                  <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
-                  Live
-                </div>
-                <SentimentIcon bias={dailyAnalysis?.marketBias} />
-              </div>
+              <CardTitle className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Daily Session IQ</CardTitle>
+              <SentimentIcon bias={dailyAnalysis?.marketBias} />
             </div>
-            <CardDescription className="text-[10px] font-black mt-1 uppercase tracking-widest text-white/80">
-              {selectedDate ? format(parseISO(selectedDate), 'MMMM dd, yyyy') : 'Live Session...'}
-            </CardDescription>
           </CardHeader>
-
           <CardContent className="space-y-5 pt-4">
             {loadingDaily ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+              <div className="flex flex-col items-center justify-center py-12 space-y-4">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/40">Synthesizing Alpha...</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/40">Synthesizing...</p>
               </div>
             ) : dailyAnalysis ? (
               <>
@@ -175,7 +141,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
                 </div>
 
                 <div className="space-y-3">
-                  <h4 className="text-[9px] font-black text-primary uppercase tracking-widest">Volatile Vectors</h4>
+                  <h4 className="text-[9px] font-black text-primary uppercase tracking-widest">Liquidity Zones</h4>
                   <div className="grid grid-cols-1 gap-2">
                     {dailyAnalysis.keyFactors.map((factor, i) => (
                       <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
@@ -185,28 +151,15 @@ export const AISidebar: React.FC<AISidebarProps> = ({
                     ))}
                   </div>
                 </div>
-
-                <div className="mt-4 pt-4 border-t border-white/5">
-                  <div className="flex items-center gap-3 p-4 rounded-xl bg-yellow-500/5 border border-yellow-500/10">
-                    <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0" />
-                    <p className="text-[9px] font-black text-yellow-500/90 leading-snug uppercase tracking-tight">
-                      Institutional Alert: Liquidity shifts expected.
-                    </p>
-                  </div>
-                </div>
               </>
             ) : (
-              <div className="text-center py-12 text-white/10 space-y-2">
-                <Activity className="w-8 h-8 mx-auto opacity-10" />
-                <p className="text-[10px] font-black uppercase tracking-widest">Awaiting Live Feed Sync...</p>
+              <div className="text-center py-12 text-white/10">
+                <p className="text-[10px] font-black uppercase tracking-widest">Select a session for analysis</p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
-      
-      {/* Bottom Spacer for Mobile Scroll */}
-      <div className="h-32 lg:hidden shrink-0" />
     </div>
   );
 };
