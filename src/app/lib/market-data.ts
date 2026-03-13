@@ -18,7 +18,6 @@ export type EconomicEvent = {
 
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   const cacheBuster = Date.now();
-  // Using the FF JSON feed directly for accuracy
   const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?v=${cacheBuster}`;
 
   try {
@@ -46,7 +45,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       const eventDate = new Date(item.date);
       const dayKey = eventDate.toISOString().split('T')[0];
 
-      // Format time to Bucharest (GMT+2/3)
+      // Bucharest (GMT+2/3) Time Format
       const timeStr = new Intl.DateTimeFormat('en-GB', { 
         timeZone: 'Europe/Bucharest', 
         hour: '2-digit', 
@@ -57,7 +56,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       if (!weekly[dayKey]) weekly[dayKey] = [];
 
       weekly[dayKey].push({
-        id: `event-${index}-${item.country}-${item.date}`.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+        id: `ev-${index}-${item.country}-${item.date}`.toLowerCase().replace(/[^a-z0-9]/g, '-'),
         date: dayKey,
         time: timeStr,
         currency: item.country || 'USD',

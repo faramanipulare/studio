@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Header } from '@/components/Header';
 import { NewsTicker } from '@/components/NewsTicker';
 import { AISidebar } from '@/components/AISidebar';
@@ -29,15 +29,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
-  useEffect(() => {
-    setIsMounted(true);
-    loadData();
-    const interval = setInterval(loadData, 120000); // Re-sync every 2 mins
-    return () => clearInterval(interval);
-  }, []);
-
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = useCallback(async (isManual = false) => {
+    if (isManual) setLoading(true);
     try {
       const data = await fetchWeeklyEvents();
       const dates = Object.keys(data).sort();
@@ -49,11 +42,8 @@ export default function Home() {
           const todayStr = new Date().toISOString().split('T')[0];
           setSelectedDate(dates.includes(todayStr) ? todayStr : dates[0]);
         }
-      } else {
-        // Only set error if we have no existing data to show
-        if (Object.keys(weeklyData).length === 0) {
-          setError("Institutional feed temporarily synchronized. Check connection.");
-        }
+      } else if (Object.keys(weeklyData).length === 0) {
+        setError("Institutional feed temporarily synchronized. Check connection.");
       }
     } catch (err: any) {
       if (Object.keys(weeklyData).length === 0) {
@@ -62,7 +52,14 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate, weeklyData]);
+
+  useEffect(() => {
+    setIsMounted(true);
+    loadData(true);
+    const interval = setInterval(() => loadData(false), 60000); 
+    return () => clearInterval(interval);
+  }, [loadData]);
 
   const selectedDayEvents = useMemo(() => {
     return selectedDate ? weeklyData[selectedDate] || [] : [];
@@ -82,20 +79,8 @@ export default function Home() {
 
   if (!isMounted) return null;
 
-  if (loading && Object.keys(weeklyData).length === 0) {
-    return (
-      <div className="flex flex-col min-h-screen bg-[#1F1C21] text-foreground">
-        <Header />
-        <main className="flex-1 flex flex-col items-center justify-center gap-4">
-          <Loader2 className="w-12 h-12 text-primary animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Synchronizing Bridge...</p>
-        </main>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground font-body overflow-hidden">
+    <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground font-body overflow-hidden w-full">
       <Header />
       
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative w-full">
@@ -113,36 +98,40 @@ export default function Home() {
               </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-3xl overflow-hidden">
-              <AISidebar 
-                selectedDayEvents={selectedDayEvents} 
-                selectedDate={selectedDate} 
-                weeklyEvents={allWeeklyEvents}
-              />
+              <div className="notranslate h-full" translate="no">
+                <AISidebar 
+                  selectedDayEvents={selectedDayEvents} 
+                  selectedDate={selectedDate} 
+                  weeklyEvents={allWeeklyEvents}
+                />
+              </div>
             </SheetContent>
           </Sheet>
         </div>
 
         {/* Sidebar Container */}
-        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[400px] overflow-hidden">
-          <AISidebar 
-            selectedDayEvents={selectedDayEvents} 
-            selectedDate={selectedDate} 
-            weeklyEvents={allWeeklyEvents}
-          />
+        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[400px] overflow-hidden bg-[#1F1C21]">
+          <div className="notranslate h-full" translate="no">
+            <AISidebar 
+              selectedDayEvents={selectedDayEvents} 
+              selectedDate={selectedDate} 
+              weeklyEvents={allWeeklyEvents}
+            />
+          </div>
         </div>
 
-        {/* Main Feed - FULL WIDTH */}
+        {/* Main Feed - FULL WIDTH FIX */}
         <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden w-full">
-          <div className="p-4 lg:p-6 pb-2 shrink-0">
+          <div className="p-4 lg:p-6 pb-2 shrink-0 w-full">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.2em]">
                   <Activity className="w-3 h-3 animate-pulse" />
                   Live Sync: Nominal
                 </div>
-                <h2 className="text-xl lg:text-2xl font-black tracking-tight text-white uppercase">
+                <h2 className="text-xl lg:text-2xl font-black tracking-tight text-white uppercase flex items-center gap-2">
                   Session Feed
-                  <span className="text-white/20 mx-2">/</span>
+                  <span className="text-white/20">/</span>
                   <span className="text-white/40 text-sm font-medium tracking-normal">
                     {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMM d') : 'Live...'}
                   </span>
@@ -153,7 +142,7 @@ export default function Home() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={loadData}
+                  onClick={() => loadData(true)}
                   disabled={loading}
                   className="h-8 px-3 border-white/10 hover:bg-white/5 bg-[#0c0e14] text-white"
                 >
@@ -178,15 +167,14 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-5 lg:grid-cols-7 gap-2 mt-4">
+            <div className="grid grid-cols-5 lg:grid-cols-7 gap-2 mt-4 notranslate" translate="no">
               {Object.keys(weeklyData).sort().slice(0, 7).map((dateStr) => {
                 const date = parseISO(dateStr);
                 const isSelected = selectedDate === dateStr;
                 return (
                   <button
                     key={dateStr}
-                    onClick={() => !loading && setSelectedDate(dateStr)}
-                    disabled={loading}
+                    onClick={() => setSelectedDate(dateStr)}
                     className={`p-2 lg:p-3 rounded-xl border transition-all text-left ${
                       isSelected ? 'bg-primary/10 border-primary/50' : 'bg-[#0c0e14] border-white/5 hover:border-white/20'
                     }`}
@@ -203,50 +191,58 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32">
-            <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-white/5 bg-white/[0.02]">
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">TIME</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">PAIR</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">EVENT</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-center">VOLATILITY</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-right">ACTUAL</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/[0.03] notranslate" translate="no">
-                    {filteredEvents.map((event) => (
-                      <tr key={event.id} className="hover:bg-white/5 transition-colors group">
-                        <td className="px-6 py-5 font-mono text-xs text-white/80">{event.time}</td>
-                        <td className="px-6 py-5 font-bold text-xs text-white">{event.currency}</td>
-                        <td className="px-6 py-5 font-bold text-xs text-white/90">{event.event}</td>
-                        <td className="px-6 py-5 text-center">
-                          <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/40'}`}>
-                            {event.impact === 'High' ? 'HIGH' : event.impact.toUpperCase()}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold whitespace-nowrap">
-                          {event.actual || <span className="text-white/10">--</span>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {(filteredEvents.length === 0 && !error && !loading) && (
-                <div className="py-20 text-center text-white/10 flex flex-col items-center gap-4">
-                  <CalendarDays className="w-12 h-12 opacity-10" />
-                  <p className="text-[10px] font-black uppercase tracking-widest">No scheduled volatility synced for this session.</p>
+          <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32 w-full">
+            <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl w-full">
+              {loading && Object.keys(weeklyData).length === 0 ? (
+                <div className="py-40 flex flex-col items-center justify-center gap-4">
+                  <Loader2 className="w-12 h-12 text-primary animate-spin" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Establishing Secure Feed...</p>
                 </div>
-              )}
-
-              {error && (
-                <div className="py-20 text-center text-rose-500 flex flex-col items-center gap-4">
+              ) : error ? (
+                <div className="py-40 text-center text-rose-500 flex flex-col items-center gap-4">
                   <AlertCircle className="w-12 h-12 opacity-50" />
                   <p className="text-sm font-black uppercase tracking-widest">{error}</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto w-full notranslate" translate="no">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
+                    <thead>
+                      <tr className="border-b border-white/5 bg-white/[0.02]">
+                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">TIME</th>
+                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">PAIR</th>
+                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">EVENT</th>
+                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-center">VOLATILITY</th>
+                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-right">ACTUAL</th>
+                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-right">FORECAST</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/[0.03]">
+                      {filteredEvents.map((event) => (
+                        <tr key={event.id} className="hover:bg-white/5 transition-colors group">
+                          <td className="px-6 py-5 font-mono text-xs text-white/80">{event.time}</td>
+                          <td className="px-6 py-5 font-bold text-xs text-white">{event.currency}</td>
+                          <td className="px-6 py-5 font-bold text-xs text-white/90 truncate max-w-[300px]">{event.event}</td>
+                          <td className="px-6 py-5 text-center">
+                            <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/40'}`}>
+                              {event.impact === 'High' ? 'HIGH' : event.impact.toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold">
+                            {event.actual || <span className="text-white/10">--</span>}
+                          </td>
+                          <td className="px-6 py-5 text-right font-mono text-xs text-white/40">
+                            {event.forecast || <span className="text-white/10">--</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {filteredEvents.length === 0 && (
+                    <div className="py-32 text-center text-white/10 flex flex-col items-center gap-4">
+                      <CalendarDays className="w-12 h-12 opacity-10" />
+                      <p className="text-[10px] font-black uppercase tracking-widest">No scheduled volatility synced for this session.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
