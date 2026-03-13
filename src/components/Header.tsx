@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -66,18 +67,12 @@ export function Header() {
       return false;
     };
 
-    // Initial attempt
     if (!triggerTranslation()) {
       let attempts = 0;
-      const maxAttempts = 60; // 20 seconds polling
       const pollInterval = setInterval(() => {
         const success = triggerTranslation();
         attempts++;
-        if (success || attempts >= maxAttempts) {
-          if (!success && attempts >= maxAttempts) {
-            console.warn("Translation widget timed out. Trying to re-init container...");
-            // Force a re-render/re-check of the widget container if needed
-          }
+        if (success || attempts >= 40) { // Try for ~13 seconds
           clearInterval(pollInterval);
         }
       }, 333);
@@ -89,7 +84,7 @@ export function Header() {
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch(() => console.warn("User interaction required for audio"));
+      audioRef.current.play().catch(() => console.warn("Audio needs user interaction"));
     }
     setIsPlaying(!isPlaying);
   };
@@ -104,7 +99,7 @@ export function Header() {
 
   return (
     <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/90 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
-      {/* Container for Google Translate - must be in DOM for script to find it */}
+      {/* Container for Google Translate - Must be present */}
       <div id="google_translate_element" className="fixed -top-full left-0 opacity-0 pointer-events-none"></div>
 
       <div className="flex items-center gap-3 lg:gap-5">
@@ -128,10 +123,10 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3 lg:gap-8">
-        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
+        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10 shadow-inner">
           <button 
             onClick={() => changeLanguage('ro')}
-            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70 cursor-pointer"
+            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 active:scale-95 transition-all shadow-lg border border-white/10 cursor-pointer"
             title="Tradu în Română"
           >
             <svg viewBox="0 0 3 2" className="w-full h-full">
@@ -142,7 +137,7 @@ export function Header() {
           </button>
           <button 
             onClick={() => changeLanguage('en')}
-            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-transform shadow-lg border border-white/10 active:opacity-70 cursor-pointer"
+            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 active:scale-95 transition-all shadow-lg border border-white/10 cursor-pointer"
             title="Translate to English"
           >
              <svg viewBox="0 0 60 30" className="w-full h-full">

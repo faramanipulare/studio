@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -20,12 +21,14 @@ export type EconomicEvent = {
 };
 
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
+  // Use a unique timestamp to bypass VPS/Proxy caches
   const timestamp = new Date().getTime();
   const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?cb=${timestamp}`;
 
   try {
     const response = await fetch(url, {
       cache: 'no-store',
+      next: { revalidate: 0 },
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
@@ -35,13 +38,14 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     });
 
     if (!response.ok) {
-      throw new Error(`Institutional Feed Error: HTTP ${response.status}`);
+      console.error(`Feed HTTP Error: ${response.status}`);
+      return {}; 
     }
 
     const rawData = await response.json();
     
-    if (!Array.isArray(rawData) || rawData.length === 0) {
-      throw new Error("No events returned from the institutional feed.");
+    if (!Array.isArray(rawData)) {
+      return {};
     }
 
     const weekly: Record<string, EconomicEvent[]> = {};
@@ -51,6 +55,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
         const dateObj = new Date(item.date);
         if (isNaN(dateObj.getTime())) return;
         
+        // Convert to Bucharest Time using native Intl
         const bucharestDateParts = new Intl.DateTimeFormat('en-CA', {
           timeZone: 'Europe/Bucharest',
           year: 'numeric',
@@ -77,13 +82,13 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
 
         const impactVal = item.impact?.toLowerCase() || '';
         if (impactVal === 'high') {
-          impact_percentage = 80 + Math.floor(Math.random() * 15);
+          impact_percentage = 82 + Math.floor(Math.random() * 12);
           sentiment = Math.random() > 0.5 ? 'Bullish' : 'Bearish';
         } else if (impactVal === 'medium' || impactVal === 'med') {
-          impact_percentage = 40 + Math.floor(Math.random() * 20);
+          impact_percentage = 45 + Math.floor(Math.random() * 15);
           sentiment = 'Mixed';
         } else {
-          impact_percentage = 10 + Math.floor(Math.random() * 20);
+          impact_percentage = 12 + Math.floor(Math.random() * 15);
           sentiment = 'Neutral';
         }
 
@@ -101,18 +106,14 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
           impact_percentage: impact_percentage
         });
       } catch (e) {
-        // Silent skip for corrupted entries
+        // Silent skip
       }
     });
 
-    Object.keys(weekly).forEach(day => {
-      weekly[day].sort((a, b) => a.time.localeCompare(b.time));
-    });
-
     return weekly;
-  } catch (error: any) {
-    console.error("Critical Feed Sync Failure:", error.message);
-    throw new Error(error.message || "Failed to synchronize institutional market data.");
+  } catch (error) {
+    console.error("Critical Feed Sync Failure:", error);
+    return {}; // Never throw to avoid 500 errors
   }
 }
 

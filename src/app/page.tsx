@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -33,6 +34,11 @@ export default function Home() {
     setError(null);
     try {
       const data = await fetchWeeklyEvents();
+      
+      if (!data || Object.keys(data).length === 0) {
+        throw new Error("No scheduled events returned from the institutional feed.");
+      }
+
       setWeeklyData(data);
       
       const dates = Object.keys(data).sort();
@@ -40,7 +46,7 @@ export default function Home() {
         setSelectedDate(dates[0]);
       }
     } catch (err: any) {
-      console.error("Live Feed Sync Error:", err);
+      console.warn("Live Sync Error (Handled):", err.message);
       setError(err.message || "Failed to sync institutional feed.");
     } finally {
       setLoading(false);
@@ -49,7 +55,7 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 180000); // 3 min refresh
+    const interval = setInterval(loadData, 300000); // 5 min refresh
     return () => clearInterval(interval);
   }, []);
 
@@ -130,7 +136,7 @@ export default function Home() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.2em]">
                   <Activity className="w-3 h-3 animate-pulse" />
-                  Live Sync Status: Nominal
+                  Live Sync Status: {error ? 'Sync Delayed' : 'Nominal'}
                 </div>
                 <h2 className="text-xl lg:text-2xl font-black tracking-tight text-white uppercase">
                   Session Feed
@@ -202,7 +208,7 @@ export default function Home() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32 custom-scrollbar">
-            {error ? (
+            {error && Object.keys(weeklyData).length === 0 ? (
               <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-8 text-center space-y-4">
                 <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
                 <h3 className="text-sm font-black text-rose-500 uppercase tracking-widest">Feed Sync Failed</h3>
