@@ -43,21 +43,26 @@ export default function Home() {
           setSelectedDate(dates.includes(todayStr) ? todayStr : dates[0]);
         }
       } else {
-        setError("Institutional feed temporarily synchronized. Check connection.");
+        // Only set error if we truly have no data and it's not a temporary sync
+        if (Object.keys(weeklyData).length === 0) {
+          setError("Establishing secure connection to market feed...");
+        }
       }
     } catch (err: any) {
-      setError("Failed to synchronize market data.");
+      if (Object.keys(weeklyData).length === 0) {
+        setError("Market synchronization failed. Check network.");
+      }
     } finally {
       setLoading(false);
     }
-  }, [selectedDate]);
+  }, [selectedDate, weeklyData]);
 
   useEffect(() => {
     setIsMounted(true);
     loadData(true);
-    const interval = setInterval(() => loadData(false), 30000); 
+    const interval = setInterval(() => loadData(false), 60000); 
     return () => clearInterval(interval);
-  }, [loadData]);
+  }, []);
 
   const selectedDayEvents = useMemo(() => {
     return selectedDate ? weeklyData[selectedDate] || [] : [];
@@ -106,7 +111,7 @@ export default function Home() {
         </div>
 
         {/* Sidebar Container */}
-        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[380px] overflow-hidden bg-[#1F1C21]">
+        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[400px] overflow-hidden bg-[#1F1C21]">
           <AISidebar 
             selectedDayEvents={selectedDayEvents} 
             selectedDate={selectedDate} 
@@ -114,44 +119,44 @@ export default function Home() {
           />
         </div>
 
-        {/* Main Feed - FULL WIDTH FIX */}
-        <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden w-full">
-          <div className="p-4 lg:p-6 pb-2 shrink-0 w-full">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
+        {/* Main Feed - FULL WIDTH */}
+        <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden w-full h-full">
+          <div className="p-4 lg:p-8 pb-2 shrink-0 w-full">
+            <div className="flex flex-col xl:flex-row xl:items-end justify-between border-b border-white/5 pb-6 gap-6">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.2em]">
                   <Activity className="w-3 h-3 animate-pulse" />
-                  Live Sync: Nominal
+                  Live Sync: ACTIVE
                 </div>
-                <h2 className="text-xl lg:text-2xl font-black tracking-tight text-white uppercase flex items-center gap-2">
+                <h2 className="text-2xl lg:text-3xl font-black tracking-tighter text-white uppercase flex items-center gap-3">
                   Session Feed
                   <span className="text-white/20">/</span>
-                  <span className="text-white/40 text-sm font-medium tracking-normal">
-                    {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMM d') : 'Live...'}
+                  <span className="text-white/40 text-lg lg:text-xl font-medium tracking-normal">
+                    {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMMM d') : 'Synchronizing...'}
                   </span>
                 </h2>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => loadData(true)}
                   disabled={loading}
-                  className="h-8 px-3 border-white/10 hover:bg-white/5 bg-[#0c0e14] text-white"
+                  className="h-10 px-6 border-white/10 hover:bg-white/5 bg-[#0c0e14] text-white"
                 >
-                  <RefreshCcw className={`w-3.5 h-3.5 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                  <span className="text-[9px] font-black uppercase">Sync Live</span>
+                  <RefreshCcw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Sync Live</span>
                 </Button>
-                <div className="flex bg-[#0c0e14] rounded-lg p-0.5 border border-white/5">
+                <div className="flex bg-[#0c0e14] rounded-xl p-1 border border-white/5">
                   {(['All', 'High'] as const).map((impact) => (
                     <Button
                       key={impact}
                       variant="ghost"
                       size="sm"
                       onClick={() => setImpactFilter(impact)}
-                      className={`h-7 px-4 text-[9px] font-black uppercase rounded-md transition-all ${
-                        impactFilter === impact ? 'bg-primary text-white' : 'text-white/40 hover:text-white'
+                      className={`h-8 px-6 text-[10px] font-black uppercase rounded-lg transition-all ${
+                        impactFilter === impact ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white'
                       }`}
                     >
                       {impact}
@@ -161,80 +166,87 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-5 lg:grid-cols-7 gap-2 mt-4">
-              {Object.keys(weeklyData).sort().slice(0, 7).map((dateStr) => {
+            <div className="flex gap-2 mt-6 overflow-x-auto pb-2 scrollbar-hide">
+              {Object.keys(weeklyData).sort().map((dateStr) => {
                 const date = parseISO(dateStr);
                 const isSelected = selectedDate === dateStr;
                 return (
                   <button
                     key={dateStr}
                     onClick={() => setSelectedDate(dateStr)}
-                    className={`p-2 lg:p-3 rounded-xl border transition-all text-left ${
-                      isSelected ? 'bg-primary/10 border-primary/50' : 'bg-[#0c0e14] border-white/5 hover:border-white/20'
+                    className={`flex-1 min-w-[120px] p-4 rounded-2xl border transition-all text-left ${
+                      isSelected ? 'bg-primary/10 border-primary shadow-[0_0_20px_rgba(59,130,246,0.1)]' : 'bg-[#0c0e14] border-white/5 hover:border-white/20'
                     }`}
                   >
-                    <span className={`text-[8px] font-black uppercase tracking-widest block mb-1 ${
+                    <span className={`text-[9px] font-black uppercase tracking-[0.2em] block mb-1.5 ${
                       isSelected ? 'text-primary' : 'text-white/40'
                     }`}>
-                      {format(date, 'EEE')}
+                      {format(date, 'EEEE')}
                     </span>
-                    <span className="text-xs lg:text-sm font-black text-white">{format(date, 'MMM dd')}</span>
+                    <span className="text-sm font-black text-white">{format(date, 'MMM dd')}</span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32 w-full">
-            <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl w-full">
+          <div className="flex-1 overflow-y-auto p-4 lg:p-8 pt-2 pb-32 w-full">
+            <div className="bg-[#0c0e14] border border-white/5 rounded-3xl overflow-hidden shadow-2xl w-full">
               {loading && Object.keys(weeklyData).length === 0 ? (
-                <div className="py-40 flex flex-col items-center justify-center gap-4">
-                  <Loader2 className="w-12 h-12 text-primary animate-spin" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Establishing Secure Feed...</p>
+                <div className="py-60 flex flex-col items-center justify-center gap-6">
+                  <div className="relative">
+                    <Loader2 className="w-16 h-16 text-primary animate-spin" />
+                    <div className="absolute inset-0 bg-primary/20 blur-xl animate-pulse rounded-full"></div>
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Establishing Secure Feed...</p>
                 </div>
               ) : error ? (
-                <div className="py-40 text-center text-rose-500 flex flex-col items-center gap-4">
-                  <AlertCircle className="w-12 h-12 opacity-50" />
-                  <p className="text-sm font-black uppercase tracking-widest">{error}</p>
+                <div className="py-60 text-center text-rose-500 flex flex-col items-center gap-6">
+                  <AlertCircle className="w-16 h-16 opacity-40 animate-pulse" />
+                  <p className="text-sm font-black uppercase tracking-[0.2em]">{error}</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto w-full">
-                  <table className="w-full text-left border-collapse min-w-[800px]">
+                  <table className="w-full text-left border-collapse min-w-[1000px]">
                     <thead>
                       <tr className="border-b border-white/5 bg-white/[0.02]">
-                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">TIME</th>
-                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">PAIR</th>
-                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">EVENT</th>
-                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-center">VOLATILITY</th>
-                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-right">ACTUAL</th>
-                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-right">FORECAST</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white/30">TIME</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white/30">PAIR</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white/30">EVENT</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 text-center">VOLATILITY</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 text-right">ACTUAL</th>
+                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 text-right">FORECAST</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/[0.03]">
                       {filteredEvents.map((event) => (
-                        <tr key={event.id} className="hover:bg-white/5 transition-colors group">
-                          <td className="px-6 py-5 font-mono text-xs text-white/80 tabular-nums">{event.time}</td>
-                          <td className="px-6 py-5 font-bold text-xs text-white">{event.currency}</td>
-                          <td className="px-6 py-5 font-bold text-xs text-white/90 truncate max-w-[300px]">{event.event}</td>
-                          <td className="px-6 py-5 text-center">
-                            <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/40'}`}>
-                              {event.impact === 'High' ? 'HIGH' : event.impact.toUpperCase()}
+                        <tr key={event.id} className="hover:bg-white/[0.04] transition-all group">
+                          <td className="px-8 py-6 font-mono text-xs text-white/80 tabular-nums">{event.time}</td>
+                          <td className="px-8 py-6 font-black text-xs text-white uppercase tracking-tighter">{event.currency}</td>
+                          <td className="px-8 py-6 font-bold text-xs text-white/90 uppercase tracking-tight">{event.event}</td>
+                          <td className="px-8 py-6 text-center">
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest ${
+                              event.impact === 'High' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 
+                              event.impact === 'Medium' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
+                              'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            }`}>
+                              {event.impact.toUpperCase()}
                             </span>
                           </td>
-                          <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold tabular-nums">
-                            {event.actual || <span className="text-white/10">--</span>}
+                          <td className="px-8 py-6 text-right font-mono text-xs text-emerald-400 font-bold tabular-nums">
+                            {event.actual || <span className="text-white/10 opacity-50">--</span>}
                           </td>
-                          <td className="px-6 py-5 text-right font-mono text-xs text-white/40 tabular-nums">
-                            {event.forecast || <span className="text-white/10">--</span>}
+                          <td className="px-8 py-6 text-right font-mono text-xs text-white/40 tabular-nums">
+                            {event.forecast || <span className="text-white/10 opacity-50">--</span>}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                   {filteredEvents.length === 0 && (
-                    <div className="py-32 text-center text-white/10 flex flex-col items-center gap-4">
-                      <CalendarDays className="w-12 h-12 opacity-10" />
-                      <p className="text-[10px] font-black uppercase tracking-widest">No scheduled volatility synced for this session.</p>
+                    <div className="py-40 text-center text-white/10 flex flex-col items-center gap-6">
+                      <CalendarDays className="w-16 h-16 opacity-10" />
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em]">No scheduled volatility detected for this session.</p>
                     </div>
                   )}
                 </div>
