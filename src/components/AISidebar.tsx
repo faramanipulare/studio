@@ -23,12 +23,22 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   const [loadingWeekly, setLoadingWeekly] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
 
+  // Weekly Analysis
   useEffect(() => {
     async function fetchWeekly() {
       if (!weeklyEvents || weeklyEvents.length === 0) return;
       setLoadingWeekly(true);
       try {
-        const result = await getWeeklyMarketOverview({ week: 'Institutional Flow' });
+        // Send actual weekly events for real analysis
+        const result = await getWeeklyMarketOverview({ 
+          weekRange: 'Current Trading Week',
+          events: weeklyEvents.slice(0, 40).map(e => ({
+            date: e.date,
+            currency: e.currency,
+            event: e.event,
+            impact: e.impact
+          }))
+        });
         setWeeklyOverview(result);
       } catch (err) {
         console.warn('Weekly IQ Delay');
@@ -39,9 +49,13 @@ export const AISidebar: React.FC<AISidebarProps> = ({
     fetchWeekly();
   }, [weeklyEvents]);
 
+  // Daily Analysis based on selected date
   useEffect(() => {
     async function fetchDaily() {
-      if (!selectedDate || !selectedDayEvents || selectedDayEvents.length === 0) return;
+      if (!selectedDate || !selectedDayEvents || selectedDayEvents.length === 0) {
+        setDailyAnalysis(null);
+        return;
+      }
       setLoadingDaily(true);
       try {
         const result = await getDailyMarketAnalysis({ 
@@ -111,9 +125,21 @@ export const AISidebar: React.FC<AISidebarProps> = ({
                   <span className="text-[10px] uppercase font-black tracking-widest">Processing...</span>
                 </div>
               ) : (
-                <p className="text-xs text-white/80 leading-relaxed font-medium italic">
-                  {weeklyOverview?.overview || "Monitoring institutional sentiment clusters for expansion..."}
-                </p>
+                <div className="space-y-3">
+                  <p className="text-xs text-white/80 leading-relaxed font-medium italic">
+                    {weeklyOverview?.overview || "Monitoring institutional sentiment clusters for expansion..."}
+                  </p>
+                  {weeklyOverview?.keyEvents && (
+                    <div className="pt-2 border-t border-white/5">
+                      <p className="text-[8px] font-black text-primary uppercase mb-2 tracking-widest">Macro Watchlist</p>
+                      <ul className="space-y-1">
+                        {weeklyOverview.keyEvents.map((ev, idx) => (
+                          <li key={idx} className="text-[10px] text-white/50">• {ev}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </CardContent>
@@ -123,7 +149,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           <CardHeader className="pb-3 border-b border-white/5">
             <div className="flex justify-between items-center">
               <CardTitle className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Daily Session IQ</CardTitle>
-              <SentimentIcon bias={dailyAnalysis?.marketBias} />
+              {loadingDaily ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <SentimentIcon bias={dailyAnalysis?.marketBias} />}
             </div>
           </CardHeader>
           <CardContent className="space-y-5 pt-4">

@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -20,6 +19,7 @@ export type EconomicEvent = {
 
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   const timestamp = Date.now();
+  // ForexFactory live JSON feed
   const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?v=${timestamp}`;
 
   try {
@@ -46,10 +46,12 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     rawData.forEach((item: any, index: number) => {
       try {
         if (!item.date) return;
+        
+        // Parse date from feed (expected format YYYY-MM-DDTHH:mm:ss)
         const dateObj = new Date(item.date);
         const dayKey = dateObj.toISOString().split('T')[0];
 
-        // Force Bucharest (GMT+2/GMT+3)
+        // Format time to Bucharest (GMT+2/GMT+3)
         const timeStr = new Intl.DateTimeFormat('en-GB', { 
           timeZone: 'Europe/Bucharest', 
           hour: '2-digit', 
@@ -66,16 +68,16 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
           currency: item.country || 'USD',
           event: item.title || 'Market Event',
           impact: mapImpact(item.impact),
-          actual: item.actual && item.actual.trim() !== "" ? item.actual.trim() : undefined,
-          forecast: item.forecast && item.forecast.trim() !== "" ? item.forecast.trim() : undefined,
-          previous: item.previous && item.previous.trim() !== "" ? item.previous.trim() : undefined,
+          actual: item.actual && item.actual.toString().trim() !== "" ? item.actual.toString().trim() : undefined,
+          forecast: item.forecast && item.forecast.toString().trim() !== "" ? item.forecast.toString().trim() : undefined,
+          previous: item.previous && item.previous.toString().trim() !== "" ? item.previous.toString().trim() : undefined,
         });
       } catch (e) {
         // Skip malformed entries
       }
     });
 
-    // Sort by chronological order
+    // Sort by chronological order per day
     Object.keys(weekly).forEach(day => {
       weekly[day].sort((a, b) => a.time.localeCompare(b.time));
     });

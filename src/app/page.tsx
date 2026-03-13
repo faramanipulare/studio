@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -49,7 +48,8 @@ export default function Home() {
         setError("No scheduled events returned from the institutional feed.");
       }
     } catch (err: any) {
-      setError("Failed to synchronize with global markets. Retrying...");
+      console.error("Live Sync Error (Handled):", err.message);
+      setError("Failed to synchronize with global markets. Check connection.");
     } finally {
       setLoading(false);
     }
@@ -57,6 +57,7 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
+    // Auto-refresh every 10 minutes
     const interval = setInterval(loadData, 600000);
     return () => clearInterval(interval);
   }, []);
@@ -65,7 +66,7 @@ export default function Home() {
     return selectedDate ? weeklyData[selectedDate] || [] : [];
   }, [selectedDate, weeklyData]);
 
-  const flatWeeklyEvents = useMemo(() => {
+  const allWeeklyEvents = useMemo(() => {
     return Object.values(weeklyData).flat();
   }, [weeklyData]);
 
@@ -92,10 +93,14 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground font-body overflow-hidden">
+    <div 
+      className="flex flex-col h-screen bg-[#1F1C21] text-foreground font-body overflow-hidden notranslate" 
+      translate="no"
+    >
       <Header />
       
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+        {/* Mobile AI Analysis Trigger */}
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 flex items-center justify-between shrink-0">
            <div className="flex items-center gap-2">
             <BrainCircuit className="w-5 h-5 text-primary" />
@@ -113,21 +118,23 @@ export default function Home() {
                 <AISidebar 
                   selectedDayEvents={selectedDayEvents} 
                   selectedDate={selectedDate} 
-                  weeklyEvents={flatWeeklyEvents}
+                  weeklyEvents={allWeeklyEvents}
                 />
               </div>
             </SheetContent>
           </Sheet>
         </div>
 
+        {/* Desktop Sidebar */}
         <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[420px] overflow-hidden">
           <AISidebar 
             selectedDayEvents={selectedDayEvents} 
             selectedDate={selectedDate} 
-            weeklyEvents={flatWeeklyEvents}
+            weeklyEvents={allWeeklyEvents}
           />
         </div>
 
+        {/* Main Feed */}
         <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden">
           <div className="p-4 lg:p-6 pb-2 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
@@ -174,6 +181,7 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Date Selector */}
             <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-7 gap-2 mt-4">
               {Object.keys(weeklyData).sort().map((dateStr) => {
                 const date = parseISO(dateStr);
@@ -198,10 +206,10 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32 custom-scrollbar notranslate" translate="no">
+          <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32 custom-scrollbar">
             <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse notranslate" translate="no">
                   <thead>
                     <tr className="border-b border-white/5 bg-white/[0.02]">
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">TIME</th>

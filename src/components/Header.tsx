@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -20,6 +19,7 @@ export function Header() {
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     
+    // Google Translate Initialization
     window.googleTranslateElementInit = () => {
       if (!window.google?.translate?.TranslateElement) return;
       new window.google.translate.TranslateElement(
@@ -78,7 +78,8 @@ export function Header() {
   }).format(time) : '--:--:--';
 
   return (
-    <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/90 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
+    <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/90 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between notranslate" translate="no">
+      {/* Hidden container for Google Translate widget */}
       <div id="google_translate_element" className="hidden"></div>
       
       <div className="flex items-center gap-3 lg:gap-5">
@@ -102,6 +103,7 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3 lg:gap-8">
+        {/* Language Switcher Buttons */}
         <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10 shadow-inner">
           <button 
             onClick={() => changeLanguage('ro')}
@@ -128,6 +130,7 @@ export function Header() {
           </button>
         </div>
 
+        {/* Radio Control */}
         <button 
           onClick={toggleRadio}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
