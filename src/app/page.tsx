@@ -49,7 +49,7 @@ export default function Home() {
       }
     } catch (err: any) {
       console.error("Live Sync Error (Handled):", err.message);
-      setError("Failed to synchronize with global markets. Check connection.");
+      setError("Failed to synchronize with global markets.");
     } finally {
       setLoading(false);
     }
@@ -57,8 +57,8 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    // Auto-refresh every 10 minutes
-    const interval = setInterval(loadData, 600000);
+    // Auto-refresh every 5 minutes for live Actual data
+    const interval = setInterval(loadData, 300000);
     return () => clearInterval(interval);
   }, []);
 
@@ -134,8 +134,8 @@ export default function Home() {
           />
         </div>
 
-        {/* Main Feed */}
-        <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden">
+        {/* Main Feed - Protected from Translation */}
+        <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden notranslate" translate="no">
           <div className="p-4 lg:p-6 pb-2 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
               <div className="space-y-1">

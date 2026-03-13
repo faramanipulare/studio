@@ -42,6 +42,13 @@ export function Header() {
       document.body.appendChild(s);
     }
 
+    // Ensure we start in English if no cookie is set
+    const cookies = document.cookie.split(';');
+    const hasTrans = cookies.some(c => c.trim().startsWith('googtrans='));
+    if (!hasTrans) {
+      document.cookie = "googtrans=/en/en; path=/";
+    }
+
     return () => clearInterval(timer);
   }, []);
 

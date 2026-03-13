@@ -41,23 +41,24 @@
     cursor: crosshair;
     top: 0px !important;
   }
+
+  /* Fix for Deprecated feature used: overflow: visible on img, video, canvas */
+  img, video, canvas {
+    overflow: clip;
+  }
 }
 
 /* Hide Google Translate Bar and Artifacts */
-iframe.skiptranslate, 
 .goog-te-banner-frame.skiptranslate, 
 .goog-te-banner-frame,
 .goog-te-gadget-icon,
-.goog-logo-link {
+.goog-logo-link,
+.skiptranslate > iframe {
   display: none !important;
 }
 
 body {
   top: 0px !important;
-}
-
-.skiptranslate > iframe {
-  display: none !important;
 }
 
 .goog-te-gadget {
@@ -92,8 +93,9 @@ body {
   animation-play-state: paused;
 }
 
-.glow-primary {
-  box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.3);
+/* Institutional protections */
+.notranslate {
+  translate: no !important;
 }
 
 .glass-panel {
