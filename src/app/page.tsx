@@ -32,32 +32,33 @@ export default function Home() {
   useEffect(() => {
     setIsMounted(true);
     loadData();
-    const interval = setInterval(loadData, 60000); 
+    const interval = setInterval(loadData, 120000); // Re-sync every 2 mins
     return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await fetchWeeklyEvents();
       const dates = Object.keys(data).sort();
       
       if (dates.length > 0) {
         setWeeklyData(data);
+        setError(null);
         if (selectedDate === null) {
           const todayStr = new Date().toISOString().split('T')[0];
-          if (dates.includes(todayStr)) {
-            setSelectedDate(todayStr);
-          } else {
-            setSelectedDate(dates[0]);
-          }
+          setSelectedDate(dates.includes(todayStr) ? todayStr : dates[0]);
         }
       } else {
-        setError("Institutional feed temporarily synchronized. Check connection.");
+        // Only set error if we have no existing data to show
+        if (Object.keys(weeklyData).length === 0) {
+          setError("Institutional feed temporarily synchronized. Check connection.");
+        }
       }
     } catch (err: any) {
-      setError("Failed to synchronize market data.");
+      if (Object.keys(weeklyData).length === 0) {
+        setError("Failed to synchronize market data.");
+      }
     } finally {
       setLoading(false);
     }
@@ -130,7 +131,7 @@ export default function Home() {
           />
         </div>
 
-        {/* Main Feed - FULL WIDTH FIX */}
+        {/* Main Feed - FULL WIDTH */}
         <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden w-full">
           <div className="p-4 lg:p-6 pb-2 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
@@ -184,7 +185,8 @@ export default function Home() {
                 return (
                   <button
                     key={dateStr}
-                    onClick={() => setSelectedDate(dateStr)}
+                    onClick={() => !loading && setSelectedDate(dateStr)}
+                    disabled={loading}
                     className={`p-2 lg:p-3 rounded-xl border transition-all text-left ${
                       isSelected ? 'bg-primary/10 border-primary/50' : 'bg-[#0c0e14] border-white/5 hover:border-white/20'
                     }`}
@@ -214,18 +216,18 @@ export default function Home() {
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30 text-right">ACTUAL</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.03]">
+                  <tbody className="divide-y divide-white/[0.03] notranslate" translate="no">
                     {filteredEvents.map((event) => (
                       <tr key={event.id} className="hover:bg-white/5 transition-colors group">
-                        <td className="px-6 py-5 font-mono text-xs text-white/80" translate="no">{event.time}</td>
-                        <td className="px-6 py-5 font-bold text-xs text-white" translate="no">{event.currency}</td>
+                        <td className="px-6 py-5 font-mono text-xs text-white/80">{event.time}</td>
+                        <td className="px-6 py-5 font-bold text-xs text-white">{event.currency}</td>
                         <td className="px-6 py-5 font-bold text-xs text-white/90">{event.event}</td>
                         <td className="px-6 py-5 text-center">
-                          <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/40'}`} translate="no">
+                          <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/40'}`}>
                             {event.impact === 'High' ? 'HIGH' : event.impact.toUpperCase()}
                           </span>
                         </td>
-                        <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold whitespace-nowrap" translate="no">
+                        <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold whitespace-nowrap">
                           {event.actual || <span className="text-white/10">--</span>}
                         </td>
                       </tr>
