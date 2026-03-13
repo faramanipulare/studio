@@ -1,8 +1,7 @@
-
 'use server';
 
 /**
- * @fileOverview Institutional market data fetcher - REAL TIME NO FALLBACK.
+ * @fileOverview Institutional market data fetcher - 100% REAL TIME.
  * Fetches data from ForexFactory source with strict cache bypassing.
  */
 
@@ -20,6 +19,7 @@ export type EconomicEvent = {
 
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   const cacheBuster = Date.now();
+  // Using the institutional JSON feed directly
   const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?v=${cacheBuster}`;
 
   try {
@@ -30,6 +30,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Expires': '0'
       },
+      next: { revalidate: 0 }
     });
 
     if (!response.ok) {
@@ -72,7 +73,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
 
     return weekly;
   } catch (error) {
-    console.error("INSTITUTIONAL SYNC CRITICAL ERROR:", error);
+    console.error("INSTITUTIONAL SYNC ERROR:", error);
     return {};
   }
 }

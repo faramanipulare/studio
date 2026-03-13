@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -56,6 +55,7 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
+    // Refresh every 2 minutes for latest Actuals
     const interval = setInterval(loadData, 120000);
     return () => clearInterval(interval);
   }, []);
@@ -92,6 +92,11 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground font-body overflow-hidden">
       <Header />
       
+      {/* 
+          CRITICAL: Apply notranslate and translate="no" to the main data area.
+          This prevents Google Translate from breaking React's virtual DOM
+          when it modifies text nodes during translation.
+      */}
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative notranslate" translate="no">
         
         {/* Mobile AI Analysis */}

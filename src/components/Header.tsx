@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -37,10 +36,12 @@ export function Header() {
   }, []);
 
   const changeLanguage = (lang: 'ro' | 'en') => {
+    // Set the cookie directly and reload the page.
+    // This is the most stable way to trigger translation without breaking React state.
     const domain = window.location.hostname;
-    // Set cookie and reload to ensure clean React state
-    document.cookie = `googtrans=/en/${lang}; domain=${domain}; path=/`;
-    document.cookie = `googtrans=/en/${lang}; path=/`;
+    const cookieValue = `/en/${lang}`;
+    document.cookie = `googtrans=${cookieValue}; domain=${domain}; path=/`;
+    document.cookie = `googtrans=${cookieValue}; path=/`;
     window.location.reload();
   };
 

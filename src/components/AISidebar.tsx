@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -24,15 +23,15 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   const [loadingWeekly, setLoadingWeekly] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
 
-  // Weekly Narrative
+  // Weekly Narrative Sync
   useEffect(() => {
     async function fetchWeekly() {
       if (!weeklyEvents || weeklyEvents.length === 0) return;
       setLoadingWeekly(true);
       try {
         const result = await getWeeklyMarketOverview({ 
-          weekRange: 'Current Week Narrative',
-          events: weeklyEvents.slice(0, 45).map(e => ({
+          weekRange: 'Current Trading Week',
+          events: weeklyEvents.slice(0, 40).map(e => ({
             date: e.date,
             currency: e.currency,
             event: e.event,
@@ -49,7 +48,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
     fetchWeekly();
   }, [weeklyEvents]);
 
-  // Daily Analysis
+  // Daily Analysis Sync
   useEffect(() => {
     async function fetchDaily() {
       if (!selectedDate || !selectedDayEvents || selectedDayEvents.length === 0) {
