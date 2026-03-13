@@ -49,19 +49,23 @@ export function Header() {
 
     addScript();
 
+    // ENSURE ENGLISH BY DEFAULT: Clear translation cookie on first load if not explicitly set
+    const hasTransCookie = document.cookie.split(';').some(c => c.trim().startsWith('googtrans='));
+    if (!hasTransCookie) {
+      document.cookie = "googtrans=/en/en; path=/";
+    }
+
     return () => clearInterval(timer);
   }, []);
 
-  // Preferred Method: Cookie + Reload to avoid React/DOM hydration mismatches
   const changeLanguage = (lang: 'ro' | 'en') => {
     try {
       const domain = window.location.hostname;
-      // Set Google Translate cookie for the chosen language
-      // The format is /source_lang/target_lang
+      // Set Google Translate cookie
       document.cookie = `googtrans=/en/${lang}; domain=${domain}; path=/`;
       document.cookie = `googtrans=/en/${lang}; path=/`;
       
-      // Reload is the ONLY way to ensure Next.js and Google Translate don't fight over the DOM
+      // RELOAD is required to ensure Next.js and Google Translate are in sync
       window.location.reload();
     } catch (err) {
       console.error("Translation switch failed", err);

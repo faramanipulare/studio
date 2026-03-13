@@ -12,7 +12,8 @@ import {
   Loader2, 
   RefreshCcw, 
   BrainCircuit,
-  CalendarDays
+  CalendarDays,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,25 +27,27 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [impactFilter, setImpactFilter] = useState<'All' | 'High'>('All');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const data = await fetchWeeklyEvents();
       if (Object.keys(data).length > 0) {
         setWeeklyData(data);
-        
         const dates = Object.keys(data).sort();
-        // Default to today if possible
         const todayStr = new Date().toISOString().split('T')[0];
         if (dates.includes(todayStr)) {
           setSelectedDate(todayStr);
         } else if (!selectedDate || !dates.includes(selectedDate)) {
           setSelectedDate(dates[0]);
         }
+      } else {
+        setError("No scheduled events returned from the institutional feed.");
       }
     } catch (err: any) {
-      console.error("Live Sync Error (Handled):", err.message);
+      setError("Failed to synchronize with global markets. Retrying...");
     } finally {
       setLoading(false);
     }
@@ -52,7 +55,7 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 300000); // 5 min auto-refresh
+    const interval = setInterval(loadData, 600000); // 10 min auto-refresh
     return () => clearInterval(interval);
   }, []);
 
@@ -79,7 +82,7 @@ export default function Home() {
         <main className="flex-1 flex flex-col items-center justify-center gap-4">
           <Loader2 className="w-12 h-12 text-primary animate-spin" />
           <p className="text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">
-            Establishing Institutional Bridge...
+            Bypassing Cache / Establishing Institutional Bridge...
           </p>
         </main>
       </div>
@@ -153,7 +156,7 @@ export default function Home() {
                   className="h-8 px-3 border-white/10 hover:bg-white/5 bg-[#0c0e14] text-white"
                 >
                   <RefreshCcw className={`w-3.5 h-3.5 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                  <span className="text-[9px] font-black uppercase">Sync</span>
+                  <span className="text-[9px] font-black uppercase">Sync Live</span>
                 </Button>
                 <div className="flex bg-[#0c0e14] rounded-lg p-0.5 border border-white/5">
                   {(['All', 'High'] as const).map((impact) => (
@@ -223,7 +226,7 @@ export default function Home() {
                         <td className="px-6 py-5 font-bold text-xs text-white/90 truncate max-w-[200px]">{event.event}</td>
                         <td className="px-6 py-5 text-center">
                           <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/40'}`}>
-                            {event.impact_percentage}%
+                            {event.impact === 'High' ? 'HIGH' : 'LOW'}
                           </span>
                         </td>
                         <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold whitespace-nowrap">
@@ -235,10 +238,20 @@ export default function Home() {
                 </table>
               </div>
 
-              {filteredEvents.length === 0 && (
+              {filteredEvents.length === 0 && !error && (
                 <div className="py-20 text-center text-white/10 flex flex-col items-center gap-4">
                   <CalendarDays className="w-12 h-12 opacity-10" />
                   <p className="text-[10px] font-black uppercase tracking-widest">No scheduled volatility synced for this session.</p>
+                </div>
+              )}
+
+              {error && (
+                <div className="py-20 text-center text-rose-500/50 flex flex-col items-center gap-4">
+                  <AlertCircle className="w-12 h-12 opacity-30" />
+                  <p className="text-[10px] font-black uppercase tracking-widest">{error}</p>
+                  <Button variant="ghost" size="sm" onClick={loadData} className="text-[9px] font-black uppercase hover:bg-white/5">
+                    Retry Synchronization
+                  </Button>
                 </div>
               )}
             </div>
