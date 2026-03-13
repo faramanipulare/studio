@@ -33,7 +33,8 @@ export function Header() {
         new window.google.translate.TranslateElement({
           pageLanguage: 'en',
           includedLanguages: 'ro,en',
-          autoDisplay: false
+          autoDisplay: false,
+          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
         }, 'google_translate_element');
       }
     };
@@ -42,8 +43,8 @@ export function Header() {
   }, []);
 
   const changeLanguage = (lang: 'ro' | 'en') => {
+    // Set cookie and force reload for stable translation on VPS
     const domain = window.location.hostname;
-    // Set cookie and force reload to ensure clean hydration
     document.cookie = `googtrans=/en/${lang}; domain=${domain}; path=/`;
     document.cookie = `googtrans=/en/${lang}; path=/`;
     window.location.reload();
@@ -97,6 +98,7 @@ export function Header() {
           <button 
             onClick={() => changeLanguage('ro')}
             className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-all border border-white/10"
+            title="Traducere în Română"
           >
             <svg viewBox="0 0 3 2" className="w-full h-full">
               <rect width="1" height="2" fill="#002B7F"/><rect width="1" height="2" x="1" fill="#FCD116"/><rect width="1" height="2" x="2" fill="#CE1126"/>
@@ -105,6 +107,7 @@ export function Header() {
           <button 
             onClick={() => changeLanguage('en')}
             className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-all border border-white/10"
+            title="Switch to English"
           >
              <svg viewBox="0 0 60 30" className="w-full h-full">
               <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>

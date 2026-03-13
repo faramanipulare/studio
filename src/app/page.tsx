@@ -48,6 +48,7 @@ export default function Home() {
         setError("Institutional feed currently unavailable.");
       }
     } catch (err: any) {
+      console.error("Critical Sync Failure:", err);
       setError("Failed to synchronize market data.");
     } finally {
       setLoading(false);
@@ -117,7 +118,7 @@ export default function Home() {
           </Sheet>
         </div>
 
-        {/* Desktop Sidebar */}
+        {/* Desktop Sidebar - Protected from Translation */}
         <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[420px] overflow-hidden notranslate" translate="no">
           <AISidebar 
             selectedDayEvents={selectedDayEvents} 
@@ -240,9 +241,12 @@ export default function Home() {
               )}
 
               {error && (
-                <div className="py-20 text-center text-rose-500/50 flex flex-col items-center gap-4">
-                  <AlertCircle className="w-12 h-12 opacity-30" />
-                  <p className="text-[10px] font-black uppercase tracking-widest">{error}</p>
+                <div className="py-20 text-center text-rose-500 flex flex-col items-center gap-4">
+                  <AlertCircle className="w-12 h-12 opacity-50" />
+                  <p className="text-sm font-black uppercase tracking-widest">{error}</p>
+                  <Button variant="outline" size="sm" onClick={loadData} className="mt-2 border-rose-500/20 text-rose-400 hover:bg-rose-500/10">
+                    RETRY SYNC
+                  </Button>
                 </div>
               )}
             </div>

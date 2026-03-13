@@ -62,6 +62,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
 
         if (!weekly[dayKey]) weekly[dayKey] = [];
 
+        // Map ACTUAL, FORECAST and PREVIOUS strictly from source
         weekly[dayKey].push({
           id: `live-${index}-${item.country || 'USD'}-${item.date}`.toLowerCase().replace(/[^a-z0-9]/g, '-'),
           date: dayKey,
