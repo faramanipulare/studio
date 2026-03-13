@@ -13,6 +13,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <body className="font-body antialiased selection:bg-primary/30 selection:text-primary-foreground min-h-screen bg-background">
         {children}
       </body>

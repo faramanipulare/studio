@@ -19,7 +19,6 @@ export type EconomicEvent = {
 
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   const cacheBuster = Date.now();
-  // Using the institutional JSON feed directly
   const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?v=${cacheBuster}`;
 
   try {

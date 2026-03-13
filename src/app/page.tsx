@@ -27,6 +27,14 @@ export default function Home() {
   const [impactFilter, setImpactFilter] = useState<'All' | 'High'>('All');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    loadData();
+    const interval = setInterval(loadData, 60000); 
+    return () => clearInterval(interval);
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -46,7 +54,7 @@ export default function Home() {
           }
         }
       } else {
-        setError("Institutional feed currently unavailable.");
+        setError("Institutional feed temporarily synchronized. Check connection.");
       }
     } catch (err: any) {
       setError("Failed to synchronize market data.");
@@ -54,12 +62,6 @@ export default function Home() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    loadData();
-    const interval = setInterval(loadData, 60000); // Sync every minute
-    return () => clearInterval(interval);
-  }, []);
 
   const selectedDayEvents = useMemo(() => {
     return selectedDate ? weeklyData[selectedDate] || [] : [];
@@ -77,13 +79,15 @@ export default function Home() {
     return events;
   }, [selectedDayEvents, impactFilter]);
 
+  if (!isMounted) return null;
+
   if (loading && Object.keys(weeklyData).length === 0) {
     return (
       <div className="flex flex-col min-h-screen bg-[#1F1C21] text-foreground">
         <Header />
         <main className="flex-1 flex flex-col items-center justify-center gap-4">
           <Loader2 className="w-12 h-12 text-primary animate-spin" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Establishing Bridge...</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary">Synchronizing Bridge...</p>
         </main>
       </div>
     );
@@ -127,7 +131,7 @@ export default function Home() {
         </div>
 
         {/* Main Feed */}
-        <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden">
+        <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden" translate="no" className="notranslate">
           <div className="p-4 lg:p-6 pb-2 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
               <div className="space-y-1">
@@ -138,7 +142,7 @@ export default function Home() {
                 <h2 className="text-xl lg:text-2xl font-black tracking-tight text-white uppercase">
                   Session Feed
                   <span className="text-white/20 mx-2">/</span>
-                  <span className="text-white/40 text-sm font-medium tracking-normal notranslate" translate="no">
+                  <span className="text-white/40 text-sm font-medium tracking-normal">
                     {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMM d') : 'Live...'}
                   </span>
                 </h2>
@@ -173,7 +177,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-5 lg:grid-cols-7 gap-2 mt-4 notranslate" translate="no">
+            <div className="grid grid-cols-5 lg:grid-cols-7 gap-2 mt-4">
               {Object.keys(weeklyData).sort().slice(0, 7).map((dateStr) => {
                 const date = parseISO(dateStr);
                 const isSelected = selectedDate === dateStr;
@@ -215,7 +219,7 @@ export default function Home() {
                       <tr key={event.id} className="hover:bg-white/5 transition-colors group">
                         <td className="px-6 py-5 font-mono text-xs text-white/80 notranslate" translate="no">{event.time}</td>
                         <td className="px-6 py-5 font-bold text-xs text-white notranslate" translate="no">{event.currency}</td>
-                        <td className="px-6 py-5 font-bold text-xs text-white/90 truncate max-w-[200px] notranslate" translate="no">{event.event}</td>
+                        <td className="px-6 py-5 font-bold text-xs text-white/90 truncate max-w-[200px]">{event.event}</td>
                         <td className="px-6 py-5 text-center">
                           <span className={`text-[11px] font-mono font-bold ${event.impact === 'High' ? 'text-rose-400' : 'text-white/40'} notranslate`} translate="no">
                             {event.impact === 'High' ? 'HIGH' : event.impact.toUpperCase()}

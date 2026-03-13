@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Clock, Zap, ShieldCheck, Volume2, VolumeX, Radio } from 'lucide-react';
+import { Clock, Zap, ShieldCheck, Radio } from 'lucide-react';
 
 export function Header() {
   const [time, setTime] = useState<Date | null>(null);
@@ -12,11 +12,11 @@ export function Header() {
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     
-    // Google Translate Initialization
+    // Google Translate Initialization with explicit HTTPS to avoid CORB
     if (!document.getElementById('google-translate-script')) {
       const script = document.createElement('script');
       script.id = 'google-translate-script';
-      script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
       script.async = true;
       document.body.appendChild(script);
     }
