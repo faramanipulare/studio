@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -20,7 +19,7 @@ export function Header() {
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     
-    // 1. Google Translate Init with robustness
+    // Google Translate Initialization
     window.googleTranslateElementInit = () => {
       try {
         if (!window.google?.translate?.TranslateElement) return;
@@ -38,7 +37,6 @@ export function Header() {
       }
     };
 
-    // 2. Script Injection
     const addScript = () => {
       if (document.getElementById('google-translate-script')) return;
       const s = document.createElement('script');
@@ -53,20 +51,23 @@ export function Header() {
     return () => clearInterval(timer);
   }, []);
 
+  // Preferred Method: Cookie + Reload to avoid React/DOM hydration mismatches
   const changeLanguage = (lang: 'ro' | 'en') => {
     try {
-      // Method A: Manipulation of the combo box
+      const domain = window.location.hostname;
+      // Set Google Translate cookie for the chosen language
+      document.cookie = `googtrans=/en/${lang}; domain=${domain}; path=/`;
+      document.cookie = `googtrans=/en/${lang}; path=/`;
+      
+      // Attempt to trigger the widget selector if already loaded
       const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
       if (combo) {
         combo.value = lang;
         combo.dispatchEvent(new Event('change'));
-      } else {
-        // Method B: Direct Cookie Manipulation (more reliable on VPS)
-        const domain = window.location.hostname;
-        document.cookie = `googtrans=/en/${lang}; domain=${domain}; path=/`;
-        document.cookie = `googtrans=/en/${lang}; path=/`;
-        window.location.reload();
       }
+      
+      // Reload is safest for React applications to prevent DOM mutation errors
+      window.location.reload();
     } catch (err) {
       console.error("Translation switch failed", err);
     }
@@ -93,7 +94,7 @@ export function Header() {
 
   return (
     <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/90 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
-      {/* Hidden container for Google Translate */}
+      {/* Hidden container for Google Translate Widget */}
       <div id="google_translate_element" className="hidden"></div>
       
       <div className="flex items-center gap-3 lg:gap-5">
@@ -117,6 +118,7 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3 lg:gap-8">
+        {/* Language Switches */}
         <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10 shadow-inner">
           <button 
             onClick={() => changeLanguage('ro')}
@@ -143,6 +145,7 @@ export function Header() {
           </button>
         </div>
 
+        {/* Radio Control */}
         <button 
           onClick={toggleRadio}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
@@ -154,6 +157,7 @@ export function Header() {
           {isPlaying ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
         </button>
 
+        {/* Local Clock */}
         <div className="hidden sm:flex flex-col items-end min-w-[80px] lg:min-w-[140px]">
           <div className="flex items-center text-[8px] lg:text-[9px] font-black text-muted-foreground gap-1.5 tracking-widest uppercase">
             <Clock className="w-2.5 h-2.5 text-primary" />

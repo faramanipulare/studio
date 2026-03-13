@@ -25,24 +25,25 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [impactFilter, setImpactFilter] = useState<'All' | 'High'>('All');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const loadData = async () => {
     setLoading(true);
-    setError(null);
     try {
       const data = await fetchWeeklyEvents();
       setWeeklyData(data);
       
       const dates = Object.keys(data).sort();
       if (dates.length > 0) {
-        if (!selectedDate || !dates.includes(selectedDate)) {
+        // Find today or first available
+        const todayStr = new Date().toISOString().split('T')[0];
+        if (dates.includes(todayStr)) {
+          setSelectedDate(todayStr);
+        } else if (!selectedDate || !dates.includes(selectedDate)) {
           setSelectedDate(dates[0]);
         }
       }
     } catch (err: any) {
-      console.warn("Live Sync Warning:", err.message);
-      setError("Institutional feed is syncing. Fallback active.");
+      console.error("Live Sync Error (Handled):", err.message);
     } finally {
       setLoading(false);
     }
@@ -50,7 +51,7 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 300000); 
+    const interval = setInterval(loadData, 300000); // 5 min auto-refresh
     return () => clearInterval(interval);
   }, []);
 
@@ -77,7 +78,7 @@ export default function Home() {
         <main className="flex-1 flex flex-col items-center justify-center gap-4">
           <Loader2 className="w-12 h-12 text-primary animate-spin" />
           <p className="text-[10px] font-black uppercase tracking-widest text-primary animate-pulse">
-            Syncing Global Session Feed...
+            Establishing Institutional Bridge...
           </p>
         </main>
       </div>
@@ -89,7 +90,7 @@ export default function Home() {
       <Header />
       
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* Mobile Market IQ */}
+        {/* Mobile Market IQ Drawer */}
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 flex items-center justify-between shrink-0">
            <div className="flex items-center gap-2">
             <BrainCircuit className="w-5 h-5 text-primary" />
@@ -99,7 +100,7 @@ export default function Home() {
           <Sheet>
             <SheetTrigger asChild>
               <Button size="sm" className="bg-primary hover:bg-primary/80 text-white text-[10px] font-black px-4 h-8 rounded-full">
-                ANALYSIS
+                GENERATE ANALYSIS
               </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-3xl overflow-hidden">
@@ -115,7 +116,7 @@ export default function Home() {
           </Sheet>
         </div>
 
-        {/* Desktop AISidebar */}
+        {/* Desktop Sidebar */}
         <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[420px] overflow-hidden">
           <AISidebar 
             selectedDayEvents={selectedDayEvents} 
@@ -124,7 +125,7 @@ export default function Home() {
           />
         </div>
 
-        {/* Main Feed Container - Enforce notranslate on technical data table */}
+        {/* Main Feed Container */}
         <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden">
           <div className="p-4 lg:p-6 pb-2 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
@@ -171,7 +172,8 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-4">
+            {/* Day Selector */}
+            <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-7 gap-2 mt-4">
               {Object.keys(weeklyData).sort().map((dateStr) => {
                 const date = parseISO(dateStr);
                 const isSelected = selectedDate === dateStr;
@@ -179,25 +181,28 @@ export default function Home() {
                   <button
                     key={dateStr}
                     onClick={() => setSelectedDate(dateStr)}
-                    className={`p-3 rounded-xl border transition-all text-left ${
+                    className={`p-2 lg:p-3 rounded-xl border transition-all text-left ${
                       isSelected ? 'bg-primary/10 border-primary/50' : 'bg-[#0c0e14] border-white/5 hover:border-white/20'
                     }`}
                   >
-                    <span className={`text-[9px] font-black uppercase tracking-widest block mb-1 ${
+                    <span className={`text-[8px] font-black uppercase tracking-widest block mb-1 ${
                       isSelected ? 'text-primary' : 'text-white/40'
                     }`}>
                       {format(date, 'EEE')}
                     </span>
-                    <span className="text-sm font-black text-white">{format(date, 'MMM dd')}</span>
+                    <span className="text-xs lg:text-sm font-black text-white">{format(date, 'MMM dd')}</span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Economic Calendar Table - Protected from Google Translate to prevent layout breaks */}
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32 custom-scrollbar notranslate">
-            <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+          {/* Economic Calendar Table - Protected from Google Translate mutators */}
+          <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32 custom-scrollbar">
+            <div 
+              className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl notranslate" 
+              translate="no"
+            >
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -221,7 +226,7 @@ export default function Home() {
                           </span>
                         </td>
                         <td className="px-6 py-5 text-right font-mono text-xs text-emerald-400 font-bold whitespace-nowrap">
-                          {event.actual ? event.actual : <span className="text-white/10 opacity-50">--</span>}
+                          {event.actual ? event.actual : <span className="text-white/10 opacity-30">--</span>}
                         </td>
                       </tr>
                     ))}
