@@ -37,8 +37,11 @@ export default function Home() {
       setWeeklyData(data);
       
       const dates = Object.keys(data).sort();
-      if (dates.length > 0 && !selectedDate) {
-        setSelectedDate(dates[0]);
+      if (dates.length > 0) {
+        // Stay on current date if still available, otherwise first date
+        if (!selectedDate || !dates.includes(selectedDate)) {
+          setSelectedDate(dates[0]);
+        }
       }
     } catch (err: any) {
       console.warn("Live Sync Warning:", err.message);
@@ -89,7 +92,7 @@ export default function Home() {
       <Header />
       
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* Mobile Header IQ */}
+        {/* Mobile Market IQ */}
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 flex items-center justify-between shrink-0">
            <div className="flex items-center gap-2">
             <BrainCircuit className="w-5 h-5 text-primary" />
@@ -195,7 +198,8 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32 custom-scrollbar">
+          {/* Table with notranslate class */}
+          <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32 custom-scrollbar notranslate">
             <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">

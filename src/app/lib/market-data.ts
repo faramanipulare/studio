@@ -3,7 +3,7 @@
 
 /**
  * @fileOverview Institutional market data fetcher.
- * Fixes date alignment to ensure events are shown for the CURRENT week.
+ * Ensures dates are always aligned to the CURRENT trading week.
  */
 
 export type EconomicEvent = {
@@ -22,7 +22,6 @@ export type EconomicEvent = {
 
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   const timestamp = new Date().getTime();
-  // Using a more reliable feed mirror with no-cache headers
   const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?v=${timestamp}`;
 
   try {
@@ -30,7 +29,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       cache: 'no-store',
       headers: {
         'Pragma': 'no-cache',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       }
     });
@@ -41,16 +40,22 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     if (!Array.isArray(rawData) || rawData.length === 0) throw new Error('Empty Data');
 
     const weekly: Record<string, EconomicEvent[]> = {};
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    
+    // Determine the start of the CURRENT week (Monday)
+    const now = new Date();
+    const currentDay = now.getDay(); // 0 is Sunday
+    const diff = now.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
+    const monday = new Date(now.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
 
     rawData.forEach((item: any) => {
       try {
         const dateObj = new Date(item.date);
-        // Ensure we handle current/upcoming events properly
         const dayKey = dateObj.toISOString().split('T')[0];
 
-        // Format time in Bucharest timezone
+        // Only include events from the current week onwards
+        if (dateObj < monday) return;
+
         const timeStr = new Intl.DateTimeFormat('en-GB', { 
           timeZone: 'Europe/Bucharest', 
           hour: '2-digit', 
@@ -108,12 +113,16 @@ function mapImpact(impact: string): 'Low' | 'Medium' | 'High' | 'Holiday' {
 
 function generateFallbackData(): Record<string, EconomicEvent[]> {
   const weekly: Record<string, EconomicEvent[]> = {};
-  const now = new Date();
   
-  // Always start from TODAY
+  // Find current Monday
+  const now = new Date();
+  const currentDay = now.getDay();
+  const diff = now.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
+  const startDay = new Date(now.setDate(diff));
+
   for (let i = 0; i < 5; i++) {
-    const d = new Date(now);
-    d.setDate(now.getDate() + i);
+    const d = new Date(startDay);
+    d.setDate(startDay.getDate() + i);
     const dayKey = d.toISOString().split('T')[0];
     
     weekly[dayKey] = [
