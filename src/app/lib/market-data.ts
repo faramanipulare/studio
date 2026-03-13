@@ -3,7 +3,6 @@
 /**
  * @fileOverview Institutional market data fetcher.
  * Strictly live connection, 0-dependency for VPS stability.
- * Replaced date-fns with native Intl to prevent VPS build errors.
  */
 
 export type EconomicEvent = {
@@ -38,15 +37,21 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     });
 
     if (!response.ok) {
-      console.error(`Feed connection failed: ${response.status}`);
-      return {}; // Return empty instead of throwing to avoid 500 crash
+      console.error(`Feed connection failed with status: ${response.status}`);
+      // Throwing error to be caught by the UI loadData try/catch
+      throw new Error(`Market feed unreachable (Status: ${response.status})`);
     }
 
     const rawData = await response.json();
     
     if (!Array.isArray(rawData)) {
       console.error("Invalid data format received from feed.");
-      return {};
+      throw new Error("Invalid data format received from institutional feed.");
+    }
+
+    if (rawData.length === 0) {
+      console.warn("Feed returned empty array.");
+      throw new Error("No events returned from the institutional feed.");
     }
 
     const weekly: Record<string, EconomicEvent[]> = {};
@@ -54,8 +59,9 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     rawData.forEach((item: any) => {
       try {
         const dateObj = new Date(item.date);
+        if (isNaN(dateObj.getTime())) return; // Skip invalid dates
         
-        // Native Intl for Bucharest time - no external libraries needed
+        // Native Intl for Bucharest time
         const bucharestDateStr = dateObj.toLocaleDateString('sv-SE', { timeZone: 'Europe/Bucharest' });
         const timeStr = dateObj.toLocaleTimeString('en-GB', { 
           timeZone: 'Europe/Bucharest', 
@@ -101,7 +107,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       }
     });
 
-    // Sort events
+    // Sort events by time
     Object.keys(weekly).forEach(day => {
       weekly[day].sort((a, b) => a.time.localeCompare(b.time));
     });
@@ -109,7 +115,8 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
     return weekly;
   } catch (error: any) {
     console.error("CRITICAL SYNC ERROR:", error.message);
-    return {}; // Graceful return to avoid server crash
+    // Rethrow to allow the frontend to handle the error state
+    throw error;
   }
 }
 

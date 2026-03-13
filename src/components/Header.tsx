@@ -22,6 +22,7 @@ export function Header() {
     audioRef.current = new Audio("https://listen.radioking.com/radio/701141/stream/766385");
     audioRef.current.volume = 0.5;
 
+    // Initialize Google Translate
     window.googleTranslateElementInit = () => {
       if (window.google && window.google.translate) {
         new window.google.translate.TranslateElement(
@@ -65,19 +66,20 @@ export function Header() {
       }
     };
 
-    // Retry logic for initialization
+    // Robust retry logic for finding the Google Translate combo box
     let attempts = 0;
-    const maxAttempts = 20;
+    const maxAttempts = 20; // 10 seconds total (500ms * 20)
     const checkInterval = setInterval(() => {
       const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
       if (combo) {
         triggerTranslation();
         clearInterval(checkInterval);
-      }
-      attempts++;
-      if (attempts >= maxAttempts) {
-        clearInterval(checkInterval);
-        console.warn("Translation widget timed out.");
+      } else {
+        attempts++;
+        if (attempts >= maxAttempts) {
+          clearInterval(checkInterval);
+          console.error("Translation widget timed out. Ensure the Google Translate script is loading correctly.");
+        }
       }
     }, 500);
   };
@@ -102,6 +104,7 @@ export function Header() {
 
   return (
     <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/80 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
+      {/* Hidden container for Google Translate widget */}
       <div id="google_translate_element" className="hidden absolute opacity-0"></div>
 
       <div className="flex items-center gap-3 lg:gap-5">
