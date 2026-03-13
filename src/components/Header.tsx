@@ -1,14 +1,8 @@
+
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
 import { Clock, Zap, ShieldCheck, Volume2, VolumeX, Radio } from 'lucide-react';
-
-declare global {
-  interface Window {
-    googleTranslateElementInit: () => void;
-    google: any;
-  }
-}
 
 export function Header() {
   const [time, setTime] = useState<Date | null>(null);
@@ -19,7 +13,7 @@ export function Header() {
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     
-    // Inject Google Translate script only once
+    // Google Translate Initialization
     if (!document.getElementById('google-translate-script')) {
       const script = document.createElement('script');
       script.id = 'google-translate-script';
@@ -28,13 +22,13 @@ export function Header() {
       document.body.appendChild(script);
     }
 
-    window.googleTranslateElementInit = () => {
-      if (window.google && window.google.translate) {
-        new window.google.translate.TranslateElement({
+    (window as any).googleTranslateElementInit = () => {
+      if ((window as any).google?.translate) {
+        new (window as any).google.translate.TranslateElement({
           pageLanguage: 'en',
           includedLanguages: 'ro,en',
           autoDisplay: false,
-          layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
+          layout: (window as any).google.translate.TranslateElement.InlineLayout.SIMPLE
         }, 'google_translate_element');
       }
     };
@@ -43,8 +37,8 @@ export function Header() {
   }, []);
 
   const changeLanguage = (lang: 'ro' | 'en') => {
-    // Set cookie and force reload for stable translation on VPS
     const domain = window.location.hostname;
+    // Set cookie and reload to ensure clean React state
     document.cookie = `googtrans=/en/${lang}; domain=${domain}; path=/`;
     document.cookie = `googtrans=/en/${lang}; path=/`;
     window.location.reload();
@@ -80,63 +74,33 @@ export function Header() {
             <Zap className="text-primary w-5 h-5 lg:w-6 lg:h-6 fill-primary/20" />
           </div>
         </div>
-        <div className="min-w-0">
+        <div>
           <div className="flex items-center gap-1.5 lg:gap-2">
-            <h1 className="text-sm lg:text-2xl font-black tracking-tighter text-white truncate uppercase">
-              Fara Manipulare
-            </h1>
+            <h1 className="text-sm lg:text-2xl font-black tracking-tighter text-white uppercase">Fara Manipulare</h1>
             <ShieldCheck className="w-3 h-3 lg:w-4 lg:h-4 text-primary shrink-0" />
           </div>
-          <p className="text-[8px] lg:text-[10px] text-primary font-black uppercase tracking-[0.2em] lg:tracking-[0.3em] truncate">
-            Institutional Intel
-          </p>
+          <p className="text-[8px] lg:text-[10px] text-primary font-black uppercase tracking-[0.2em] lg:tracking-[0.3em]">Institutional Intel</p>
         </div>
       </div>
 
       <div className="flex items-center gap-3 lg:gap-8">
         <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10">
-          <button 
-            onClick={() => changeLanguage('ro')}
-            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-all border border-white/10"
-            title="Traducere în Română"
-          >
-            <svg viewBox="0 0 3 2" className="w-full h-full">
-              <rect width="1" height="2" fill="#002B7F"/><rect width="1" height="2" x="1" fill="#FCD116"/><rect width="1" height="2" x="2" fill="#CE1126"/>
-            </svg>
+          <button onClick={() => changeLanguage('ro')} className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden border border-white/10 hover:opacity-80 transition-opacity">
+            <svg viewBox="0 0 3 2" className="w-full h-full"><rect width="1" height="2" fill="#002B7F"/><rect width="1" height="2" x="1" fill="#FCD116"/><rect width="1" height="2" x="2" fill="#CE1126"/></svg>
           </button>
-          <button 
-            onClick={() => changeLanguage('en')}
-            className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 transition-all border border-white/10"
-            title="Switch to English"
-          >
-             <svg viewBox="0 0 60 30" className="w-full h-full">
-              <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
-              <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/>
-              <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="4"/>
-              <path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10"/>
-              <path d="M30,0 v30" stroke="#C8102E" strokeWidth="6"/>
-              <path d="M0,15 h60" stroke="#C8102E" strokeWidth="6"/>
-            </svg>
+          <button onClick={() => changeLanguage('en')} className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden border border-white/10 hover:opacity-80 transition-opacity">
+            <svg viewBox="0 0 60 30" className="w-full h-full"><path d="M0,0 v30 h60 v-30 z" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" strokeWidth="10"/><path d="M30,0 v30" stroke="#C8102E" strokeWidth="6"/><path d="M0,15 h60" stroke="#C8102E" strokeWidth="6"/></svg>
           </button>
         </div>
 
-        <button 
-          onClick={toggleRadio}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
-            isPlaying ? 'bg-primary/20 border-primary text-primary animate-pulse' : 'bg-white/5 border-white/10 text-white/40 hover:text-white'
-          }`}
-        >
+        <button onClick={toggleRadio} className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${isPlaying ? 'bg-primary/20 border-primary text-primary' : 'bg-white/5 border-white/10 text-white/40'}`}>
           <Radio className="w-3.5 h-3.5" />
-          <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline">Pescobar FM</span>
-          {isPlaying ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+          <span className="text-[9px] font-black uppercase hidden sm:inline">Pescobar FM</span>
         </button>
 
         <div className="hidden sm:flex flex-col items-end min-w-[140px]">
-          <div className="flex items-center text-[9px] font-black text-muted-foreground gap-1.5 tracking-widest uppercase">
-            <Clock className="w-2.5 h-2.5 text-primary" />
-            <span>BUCHAREST TIME</span>
-          </div>
-          <span className="text-sm lg:text-lg font-mono font-black text-white tabular-nums">{bucharestTime}</span>
+          <span className="text-[9px] font-black text-muted-foreground tracking-widest uppercase">Bucharest Time</span>
+          <span className="text-sm lg:text-lg font-mono font-black text-white">{bucharestTime}</span>
         </div>
       </div>
     </header>

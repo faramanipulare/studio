@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -23,15 +24,15 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   const [loadingWeekly, setLoadingWeekly] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
 
-  // Weekly Analysis - Updates when weekly data changes
+  // Weekly Narrative
   useEffect(() => {
     async function fetchWeekly() {
       if (!weeklyEvents || weeklyEvents.length === 0) return;
       setLoadingWeekly(true);
       try {
         const result = await getWeeklyMarketOverview({ 
-          weekRange: 'Current Trading Week',
-          events: weeklyEvents.slice(0, 50).map(e => ({
+          weekRange: 'Current Week Narrative',
+          events: weeklyEvents.slice(0, 45).map(e => ({
             date: e.date,
             currency: e.currency,
             event: e.event,
@@ -48,7 +49,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
     fetchWeekly();
   }, [weeklyEvents]);
 
-  // Daily Analysis - Updates when selected date or day events change
+  // Daily Analysis
   useEffect(() => {
     async function fetchDaily() {
       if (!selectedDate || !selectedDayEvents || selectedDayEvents.length === 0) {
@@ -127,7 +128,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
               ) : (
                 <div className="space-y-3">
                   <p className="text-xs text-white/80 leading-relaxed font-medium italic">
-                    {weeklyOverview?.overview || "Waiting for market data synchronization..."}
+                    {weeklyOverview?.overview || "Synchronizing with institutional narrative..."}
                   </p>
                   {weeklyOverview?.keyEvents && (
                     <div className="pt-2 border-t border-white/5">

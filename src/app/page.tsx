@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -38,7 +39,6 @@ export default function Home() {
       if (dates.length > 0) {
         setWeeklyData(data);
         const todayStr = new Date().toISOString().split('T')[0];
-        // Select today or first available day
         if (dates.includes(todayStr)) {
           setSelectedDate(todayStr);
         } else {
@@ -48,7 +48,6 @@ export default function Home() {
         setError("Institutional feed currently unavailable.");
       }
     } catch (err: any) {
-      console.error("Critical Sync Failure:", err);
       setError("Failed to synchronize market data.");
     } finally {
       setLoading(false);
@@ -57,7 +56,7 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 300000); // 5 min sync
+    const interval = setInterval(loadData, 120000);
     return () => clearInterval(interval);
   }, []);
 
@@ -93,7 +92,8 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground font-body overflow-hidden">
       <Header />
       
-      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative notranslate" translate="no">
+        
         {/* Mobile AI Analysis */}
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 flex items-center justify-between shrink-0">
            <div className="flex items-center gap-2">
@@ -107,19 +107,17 @@ export default function Home() {
               </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-3xl overflow-hidden">
-              <div className="h-full overflow-hidden notranslate" translate="no">
-                <AISidebar 
-                  selectedDayEvents={selectedDayEvents} 
-                  selectedDate={selectedDate} 
-                  weeklyEvents={allWeeklyEvents}
-                />
-              </div>
+              <AISidebar 
+                selectedDayEvents={selectedDayEvents} 
+                selectedDate={selectedDate} 
+                weeklyEvents={allWeeklyEvents}
+              />
             </SheetContent>
           </Sheet>
         </div>
 
-        {/* Desktop Sidebar - Protected from Translation */}
-        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[420px] overflow-hidden notranslate" translate="no">
+        {/* Sidebar Container */}
+        <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[420px] overflow-hidden">
           <AISidebar 
             selectedDayEvents={selectedDayEvents} 
             selectedDate={selectedDate} 
@@ -127,8 +125,8 @@ export default function Home() {
           />
         </div>
 
-        {/* Main Feed - Protected from DOM corruption by Google Translate */}
-        <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden notranslate" translate="no">
+        {/* Main Feed */}
+        <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden">
           <div className="p-4 lg:p-6 pb-2 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-4 gap-4">
               <div className="space-y-1">
@@ -174,7 +172,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Date Selector */}
             <div className="grid grid-cols-5 lg:grid-cols-7 gap-2 mt-4">
               {Object.keys(weeklyData).sort().slice(0, 7).map((dateStr) => {
                 const date = parseISO(dateStr);
@@ -199,11 +196,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Table Container - Protected from Translation */}
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-4 lg:p-6 pt-0 pb-32">
             <div className="bg-[#0c0e14] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse notranslate" translate="no">
+                <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-white/5 bg-white/[0.02]">
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-white/30">TIME</th>
@@ -233,7 +229,7 @@ export default function Home() {
                 </table>
               </div>
 
-              {filteredEvents.length === 0 && !error && !loading && (
+              {(filteredEvents.length === 0 && !error && !loading) && (
                 <div className="py-20 text-center text-white/10 flex flex-col items-center gap-4">
                   <CalendarDays className="w-12 h-12 opacity-10" />
                   <p className="text-[10px] font-black uppercase tracking-widest">No scheduled volatility synced for this session.</p>
@@ -244,9 +240,6 @@ export default function Home() {
                 <div className="py-20 text-center text-rose-500 flex flex-col items-center gap-4">
                   <AlertCircle className="w-12 h-12 opacity-50" />
                   <p className="text-sm font-black uppercase tracking-widest">{error}</p>
-                  <Button variant="outline" size="sm" onClick={loadData} className="mt-2 border-rose-500/20 text-rose-400 hover:bg-rose-500/10">
-                    RETRY SYNC
-                  </Button>
                 </div>
               )}
             </div>
