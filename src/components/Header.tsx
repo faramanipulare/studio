@@ -20,19 +20,25 @@ export function Header() {
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     
-    // Google Translate Initialization
+    // 1. Google Translate Init with robustness
     window.googleTranslateElementInit = () => {
-      new window.google.translate.TranslateElement(
-        { 
-          pageLanguage: 'en', 
-          includedLanguages: 'ro,en',
-          layout: window.google?.translate?.TranslateElement?.InlineLayout?.SIMPLE,
-          autoDisplay: false 
-        }, 
-        'google_translate_element'
-      );
+      try {
+        if (!window.google?.translate?.TranslateElement) return;
+        new window.google.translate.TranslateElement(
+          { 
+            pageLanguage: 'en', 
+            includedLanguages: 'ro,en',
+            layout: window.google.translate.TranslateElement.InlineLayout?.SIMPLE,
+            autoDisplay: false 
+          }, 
+          'google_translate_element'
+        );
+      } catch (err) {
+        console.warn("Translation Init Failed", err);
+      }
     };
 
+    // 2. Script Injection
     const addScript = () => {
       if (document.getElementById('google-translate-script')) return;
       const s = document.createElement('script');
@@ -48,19 +54,21 @@ export function Header() {
   }, []);
 
   const changeLanguage = (lang: 'ro' | 'en') => {
-    const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-    if (combo) {
-      combo.value = lang;
-      combo.dispatchEvent(new Event('change'));
-    } else {
-      // If combo not ready, try one more time after a short delay
-      setTimeout(() => {
-        const retryCombo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-        if (retryCombo) {
-          retryCombo.value = lang;
-          retryCombo.dispatchEvent(new Event('change'));
-        }
-      }, 500);
+    try {
+      // Method A: Manipulation of the combo box
+      const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+      if (combo) {
+        combo.value = lang;
+        combo.dispatchEvent(new Event('change'));
+      } else {
+        // Method B: Direct Cookie Manipulation (more reliable on VPS)
+        const domain = window.location.hostname;
+        document.cookie = `googtrans=/en/${lang}; domain=${domain}; path=/`;
+        document.cookie = `googtrans=/en/${lang}; path=/`;
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error("Translation switch failed", err);
     }
   };
 
@@ -85,7 +93,8 @@ export function Header() {
 
   return (
     <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/90 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
-      <div id="google_translate_element" style={{ display: 'none' }}></div>
+      {/* Hidden container for Google Translate */}
+      <div id="google_translate_element" className="hidden"></div>
       
       <div className="flex items-center gap-3 lg:gap-5">
         <div className="relative group shrink-0">
@@ -112,6 +121,7 @@ export function Header() {
           <button 
             onClick={() => changeLanguage('ro')}
             className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 active:scale-95 transition-all shadow-lg border border-white/10 cursor-pointer"
+            title="Traducere în Română"
           >
             <svg viewBox="0 0 3 2" className="w-full h-full">
               <rect width="1" height="2" fill="#002B7F"/><rect width="1" height="2" x="1" fill="#FCD116"/><rect width="1" height="2" x="2" fill="#CE1126"/>
@@ -120,6 +130,7 @@ export function Header() {
           <button 
             onClick={() => changeLanguage('en')}
             className="w-7 h-5 lg:w-8 lg:h-6 rounded overflow-hidden hover:scale-110 active:scale-95 transition-all shadow-lg border border-white/10 cursor-pointer"
+            title="Translate to English"
           >
              <svg viewBox="0 0 60 30" className="w-full h-full">
               <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
