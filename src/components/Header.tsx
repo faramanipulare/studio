@@ -20,39 +20,26 @@ export function Header() {
     setTime(new Date());
     const timer = setInterval(() => setTime(new Date()), 1000);
     
-    // Google Translate Initialization
     window.googleTranslateElementInit = () => {
-      try {
-        if (!window.google?.translate?.TranslateElement) return;
-        new window.google.translate.TranslateElement(
-          { 
-            pageLanguage: 'en', 
-            includedLanguages: 'ro,en',
-            layout: window.google.translate.TranslateElement.InlineLayout?.SIMPLE,
-            autoDisplay: false 
-          }, 
-          'google_translate_element'
-        );
-      } catch (err) {
-        console.warn("Translation Init Failed", err);
-      }
+      if (!window.google?.translate?.TranslateElement) return;
+      new window.google.translate.TranslateElement(
+        { 
+          pageLanguage: 'en', 
+          includedLanguages: 'ro,en',
+          layout: window.google.translate.TranslateElement.InlineLayout?.SIMPLE,
+          autoDisplay: false 
+        }, 
+        'google_translate_element'
+      );
     };
 
-    const addScript = () => {
-      if (document.getElementById('google-translate-script')) return;
+    const scriptId = 'google-translate-script';
+    if (!document.getElementById(scriptId)) {
       const s = document.createElement('script');
-      s.id = 'google-translate-script';
+      s.id = scriptId;
       s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
       s.async = true;
       document.body.appendChild(s);
-    };
-
-    addScript();
-
-    // ENSURE ENGLISH BY DEFAULT: Clear translation cookie on first load if not explicitly set
-    const hasTransCookie = document.cookie.split(';').some(c => c.trim().startsWith('googtrans='));
-    if (!hasTransCookie) {
-      document.cookie = "googtrans=/en/en; path=/";
     }
 
     return () => clearInterval(timer);
@@ -61,11 +48,10 @@ export function Header() {
   const changeLanguage = (lang: 'ro' | 'en') => {
     try {
       const domain = window.location.hostname;
-      // Set Google Translate cookie
+      // Set the standard Google Translate cookie
       document.cookie = `googtrans=/en/${lang}; domain=${domain}; path=/`;
       document.cookie = `googtrans=/en/${lang}; path=/`;
-      
-      // RELOAD is required to ensure Next.js and Google Translate are in sync
+      // Reload is necessary to force the translation engine to update and React to re-hydrate properly
       window.location.reload();
     } catch (err) {
       console.error("Translation switch failed", err);
@@ -93,7 +79,6 @@ export function Header() {
 
   return (
     <header className="h-16 lg:h-20 border-b border-white/5 bg-[#1F1C21]/90 backdrop-blur-xl sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
-      {/* Hidden container for Google Translate Widget */}
       <div id="google_translate_element" className="hidden"></div>
       
       <div className="flex items-center gap-3 lg:gap-5">
@@ -117,7 +102,6 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3 lg:gap-8">
-        {/* Language Switches */}
         <div className="flex items-center gap-2 bg-white/5 p-1 rounded-lg border border-white/10 shadow-inner">
           <button 
             onClick={() => changeLanguage('ro')}
@@ -144,7 +128,6 @@ export function Header() {
           </button>
         </div>
 
-        {/* Radio Control */}
         <button 
           onClick={toggleRadio}
           className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
@@ -156,7 +139,6 @@ export function Header() {
           {isPlaying ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
         </button>
 
-        {/* Local Clock */}
         <div className="hidden sm:flex flex-col items-end min-w-[80px] lg:min-w-[140px]">
           <div className="flex items-center text-[8px] lg:text-[9px] font-black text-muted-foreground gap-1.5 tracking-widest uppercase">
             <Clock className="w-2.5 h-2.5 text-primary" />
