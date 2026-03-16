@@ -23,7 +23,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   const [loadingWeekly, setLoadingWeekly] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
 
-  // Weekly Overview - Only refresh when weekly data changes
+  // Weekly Overview - Only refresh when weekly data length changes significantly
   useEffect(() => {
     async function fetchWeekly() {
       if (!weeklyEvents || weeklyEvents.length === 0) return;
@@ -55,9 +55,9 @@ export const AISidebar: React.FC<AISidebarProps> = ({
     async function fetchDaily() {
       if (!selectedDate) return;
       
+      setDailyAnalysis(null); // Clear old analysis immediately
       setLoadingDaily(true);
       try {
-        // We pass the current date and its specific events to Gemini
         const result = await getDailyMarketAnalysis({ 
           date: selectedDate, 
           events: selectedDayEvents.map(e => ({
@@ -80,7 +80,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
 
     fetchDaily();
     return () => { isSubscribed = false; };
-  }, [selectedDate, selectedDayEvents]); // Dependency on events and date ensures refresh
+  }, [selectedDate, selectedDayEvents.length]); // Dependency on date and length ensures refresh
 
   const SentimentIcon = ({ bias }: { bias?: string }) => {
     switch (bias) {

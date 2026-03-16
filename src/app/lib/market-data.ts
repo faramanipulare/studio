@@ -18,7 +18,7 @@ export type EconomicEvent = {
 
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
   const cacheBuster = Date.now();
-  // Using cache: no-store to ensure 'Actual' values are live.
+  // Ensure we fetch from a fresh endpoint to get 'Actual' values.
   const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?v=${cacheBuster}`;
 
   try {
@@ -41,6 +41,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       if (!item.date || !item.title) return;
       
       const eventDate = new Date(item.date);
+      // Format date as YYYY-MM-DD for consistency
       const dayKey = eventDate.toISOString().split('T')[0];
 
       const timeStr = new Intl.DateTimeFormat('en-GB', { 
@@ -53,16 +54,16 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       if (!weekly[dayKey]) weekly[dayKey] = [];
 
       weekly[dayKey].push({
-        id: `ev-${index}-${item.country}-${item.date}`.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+        id: `ev-${index}-${item.country || 'usd'}-${dayKey}`.toLowerCase().replace(/[^a-z0-9]/g, '-'),
         date: dayKey,
         time: timeStr,
         currency: item.country || 'USD',
         event: item.title || 'Market Event',
         impact: mapImpact(item.impact),
-        // Ensure values are strings or undefined
-        actual: (item.actual !== undefined && item.actual !== null && String(item.actual).trim() !== "") ? String(item.actual) : undefined,
-        forecast: (item.forecast !== undefined && item.forecast !== null && String(item.forecast).trim() !== "") ? String(item.forecast) : undefined,
-        previous: (item.previous !== undefined && item.previous !== null && String(item.previous).trim() !== "") ? String(item.previous) : undefined,
+        // Ensure values are strings and trimmed. Use undefined if empty.
+        actual: (item.actual && String(item.actual).trim() !== "") ? String(item.actual) : undefined,
+        forecast: (item.forecast && String(item.forecast).trim() !== "") ? String(item.forecast) : undefined,
+        previous: (item.previous && String(item.previous).trim() !== "") ? String(item.previous) : undefined,
       });
     });
 

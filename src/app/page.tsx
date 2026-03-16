@@ -39,7 +39,14 @@ export default function Home() {
         
         const dates = Object.keys(data).sort();
         if (!selectedDate) {
-          const todayStr = new Date().toISOString().split('T')[0];
+          // Detect today's date in Bucharest timezone
+          const todayStr = new Intl.DateTimeFormat('sv-SE', {
+            timeZone: 'Europe/Bucharest',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          }).format(new Date());
+          
           setSelectedDate(dates.includes(todayStr) ? todayStr : dates[0]);
         }
       } else {
@@ -86,8 +93,8 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground overflow-hidden w-full" suppressHydrationWarning>
       <Header />
       
-      {/* PROTECTED CONTAINER: translate="no" prevents Google Translate from breaking React State */}
-      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative w-full notranslate" translate="no">
+      {/* PROTECTED CONTAINER: translate="no" stops Google Translate from crashing React state */}
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative w-full notranslate" translate="no" style={{ width: '100%', maxWidth: '100%' }}>
         
         {/* Mobile AI Analysis Trigger */}
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 flex items-center justify-between shrink-0">
@@ -120,7 +127,7 @@ export default function Home() {
           />
         </div>
 
-        {/* Main Feed - 100% WIDTH OPTIMIZED (Removed max-w limits) */}
+        {/* Main Feed - FULL WIDTH OPTIMIZED (No max-width limits) */}
         <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden w-full">
           <div className="p-4 lg:p-8 pb-2 shrink-0 w-full">
             <div className="flex flex-col xl:flex-row xl:items-end justify-between border-b border-white/5 pb-6 gap-6 w-full">
@@ -203,9 +210,12 @@ export default function Home() {
                   <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Establishing Secure Feed...</p>
                 </div>
               ) : error ? (
-                <div className="py-40 text-center text-rose-500 flex flex-col items-center gap-6">
+                <div className="py-40 text-center text-rose-500 flex flex-col items-center gap-6 bg-rose-500/5">
                   <AlertCircle className="w-16 h-16 opacity-40 animate-pulse" />
                   <p className="text-sm font-black uppercase tracking-[0.2em]">{error}</p>
+                  <Button variant="outline" size="sm" onClick={() => window.location.reload()} className="mt-4 border-rose-500/20 hover:bg-rose-500/10 text-rose-500">
+                    RETRY CONNECTION
+                  </Button>
                 </div>
               ) : (
                 <div className="overflow-x-auto w-full">
