@@ -23,6 +23,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   const [loadingWeekly, setLoadingWeekly] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
 
+  // Weekly Overview - Only sync if weeklyEvents change significantly
   useEffect(() => {
     async function fetchWeekly() {
       if (!weeklyEvents || weeklyEvents.length === 0) return;
@@ -45,14 +46,15 @@ export const AISidebar: React.FC<AISidebarProps> = ({
       }
     }
     fetchWeekly();
-  }, [weeklyEvents]);
+  }, [weeklyEvents.length > 0]); // Trigger only when data first arrives
 
+  // Daily Analysis - CRITICAL: Trigger whenever selectedDate OR events change
   useEffect(() => {
+    let isSubscribed = true;
+
     async function fetchDaily() {
-      if (!selectedDate || !selectedDayEvents || selectedDayEvents.length === 0) {
-        setDailyAnalysis(null);
-        return;
-      }
+      if (!selectedDate) return;
+      
       setLoadingDaily(true);
       try {
         const result = await getDailyMarketAnalysis({ 
@@ -67,15 +69,17 @@ export const AISidebar: React.FC<AISidebarProps> = ({
             previous: e.previous
           }))
         });
-        setDailyAnalysis(result);
+        if (isSubscribed) setDailyAnalysis(result);
       } catch (err) {
         console.warn('AI Daily IQ Sync Delay');
       } finally {
-        setLoadingDaily(false);
+        if (isSubscribed) setLoadingDaily(false);
       }
     }
+
     fetchDaily();
-  }, [selectedDate, selectedDayEvents]);
+    return () => { isSubscribed = false; };
+  }, [selectedDate, selectedDayEvents.length]); // Re-run when date or event count changes
 
   const SentimentIcon = ({ bias }: { bias?: string }) => {
     switch (bias) {
@@ -87,7 +91,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#1F1C21] overflow-hidden notranslate" translate="no">
+    <div className="flex flex-col h-full bg-[#1F1C21] overflow-hidden">
       <div className="p-4 border-b border-white/5 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">

@@ -17,14 +17,12 @@ export type EconomicEvent = {
 };
 
 export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[]>> {
-  // Strict cache busting to ensure VPS gets the latest data from ForexFactory
   const cacheBuster = Date.now();
   const url = `https://nfs.faireconomy.media/ff_calendar_thisweek.json?v=${cacheBuster}`;
 
   try {
     const response = await fetch(url, {
       cache: 'no-store',
-      next: { revalidate: 0 },
       headers: {
         'Pragma': 'no-cache',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -32,9 +30,7 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
       }
     });
 
-    if (!response.ok) {
-      throw new Error(`FF_API_SYNC_FAILED: ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`FF_API_SYNC_FAILED: ${response.status}`);
 
     const rawData = await response.json();
     if (!Array.isArray(rawData)) return {};
@@ -64,10 +60,9 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
         currency: item.country || 'USD',
         event: item.title || 'Market Event',
         impact: mapImpact(item.impact),
-        // Ensure values are strings and not null/undefined
-        actual: item.actual ? item.actual.toString() : undefined,
-        forecast: item.forecast ? item.forecast.toString() : undefined,
-        previous: item.previous ? item.previous.toString() : undefined,
+        actual: item.actual && item.actual !== "" ? item.actual.toString() : undefined,
+        forecast: item.forecast && item.forecast !== "" ? item.forecast.toString() : undefined,
+        previous: item.previous && item.previous !== "" ? item.previous.toString() : undefined,
       });
     });
 

@@ -23,11 +23,6 @@
     --border: 217 19% 18%;
     --input: 217 19% 18%;
     --ring: 224 76.3% 48%;
-    --chart-1: 217 91% 60%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
     --radius: 0.5rem;
   }
 }
@@ -41,14 +36,9 @@
     cursor: crosshair;
     top: 0px !important;
   }
-
-  /* Fix for Deprecated feature used: overflow: visible on img, video, canvas */
-  img, video, canvas {
-    overflow: clip;
-  }
 }
 
-/* Hide Google Translate Bar and Artifacts */
+/* Hide Google Translate Artifacts */
 .goog-te-banner-frame.skiptranslate, 
 .goog-te-banner-frame,
 .goog-te-gadget-icon,
@@ -93,11 +83,23 @@ body {
   animation-play-state: paused;
 }
 
-/* Institutional protections */
 .notranslate {
   translate: no !important;
 }
 
 .glass-panel {
   @apply bg-card/40 backdrop-blur-md border border-white/5;
+}
+
+/* Ensure full width across all layouts */
+.main-grid-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .main-grid-container {
+    grid-template-columns: 400px 1fr;
+  }
 }

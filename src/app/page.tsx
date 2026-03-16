@@ -33,17 +33,16 @@ export default function Home() {
     if (isManual) setLoading(true);
     try {
       const data = await fetchWeeklyEvents();
-      const dates = Object.keys(data).sort();
-      
-      if (dates.length > 0) {
+      if (data && Object.keys(data).length > 0) {
         setWeeklyData(data);
         setError(null);
-        if (selectedDate === null) {
+        
+        const dates = Object.keys(data).sort();
+        if (!selectedDate) {
           const todayStr = new Date().toISOString().split('T')[0];
           setSelectedDate(dates.includes(todayStr) ? todayStr : dates[0]);
         }
       } else {
-        // Only set error if we truly have no data and it's not a temporary sync
         if (Object.keys(weeklyData).length === 0) {
           setError("Establishing secure connection to market feed...");
         }
@@ -60,9 +59,9 @@ export default function Home() {
   useEffect(() => {
     setIsMounted(true);
     loadData(true);
-    const interval = setInterval(() => loadData(false), 60000); 
+    const interval = setInterval(() => loadData(false), 30000); 
     return () => clearInterval(interval);
-  }, []);
+  }, [loadData]);
 
   const selectedDayEvents = useMemo(() => {
     return selectedDate ? weeklyData[selectedDate] || [] : [];
@@ -86,9 +85,9 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground overflow-hidden w-full" suppressHydrationWarning>
       <Header />
       
-      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative w-full notranslate" translate="no">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative w-full" translate="no">
         
-        {/* Mobile AI Analysis */}
+        {/* Mobile AI Analysis Trigger */}
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 flex items-center justify-between shrink-0">
            <div className="flex items-center gap-2">
             <BrainCircuit className="w-5 h-5 text-primary" />
@@ -110,7 +109,7 @@ export default function Home() {
           </Sheet>
         </div>
 
-        {/* Sidebar Container */}
+        {/* Sidebar Container - FIXED WIDTH ON DESKTOP */}
         <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[400px] overflow-hidden bg-[#1F1C21]">
           <AISidebar 
             selectedDayEvents={selectedDayEvents} 
@@ -119,25 +118,25 @@ export default function Home() {
           />
         </div>
 
-        {/* Main Feed - FULL WIDTH */}
-        <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden w-full h-full">
+        {/* Main Feed - FLEX-1 TO TAKE ALL REMAINING SPACE */}
+        <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden w-full">
           <div className="p-4 lg:p-8 pb-2 shrink-0 w-full">
-            <div className="flex flex-col xl:flex-row xl:items-end justify-between border-b border-white/5 pb-6 gap-6">
+            <div className="flex flex-col xl:flex-row xl:items-end justify-between border-b border-white/5 pb-6 gap-6 w-full">
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-[0.2em]">
                   <Activity className="w-3 h-3 animate-pulse" />
                   Live Sync: ACTIVE
                 </div>
-                <h2 className="text-2xl lg:text-3xl font-black tracking-tighter text-white uppercase flex items-center gap-3">
+                <h2 className="text-2xl lg:text-3xl font-black tracking-tighter text-white uppercase flex flex-wrap items-center gap-3">
                   Session Feed
-                  <span className="text-white/20">/</span>
-                  <span className="text-white/40 text-lg lg:text-xl font-medium tracking-normal">
+                  <span className="text-white/20 hidden sm:inline">/</span>
+                  <span className="text-white/40 text-lg lg:text-xl font-medium tracking-normal notranslate" translate="no">
                     {selectedDate ? format(parseISO(selectedDate), 'EEEE, MMMM d') : 'Synchronizing...'}
                   </span>
                 </h2>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -183,7 +182,7 @@ export default function Home() {
                     }`}>
                       {format(date, 'EEEE')}
                     </span>
-                    <span className="text-sm font-black text-white">{format(date, 'MMM dd')}</span>
+                    <span className="text-sm font-black text-white notranslate" translate="no">{format(date, 'MMM dd')}</span>
                   </button>
                 );
               })}
@@ -221,9 +220,9 @@ export default function Home() {
                     <tbody className="divide-y divide-white/[0.03]">
                       {filteredEvents.map((event) => (
                         <tr key={event.id} className="hover:bg-white/[0.04] transition-all group">
-                          <td className="px-8 py-6 font-mono text-xs text-white/80 tabular-nums">{event.time}</td>
-                          <td className="px-8 py-6 font-black text-xs text-white uppercase tracking-tighter">{event.currency}</td>
-                          <td className="px-8 py-6 font-bold text-xs text-white/90 uppercase tracking-tight">{event.event}</td>
+                          <td className="px-8 py-6 font-mono text-xs text-white/80 tabular-nums notranslate" translate="no">{event.time}</td>
+                          <td className="px-8 py-6 font-black text-xs text-white uppercase tracking-tighter notranslate" translate="no">{event.currency}</td>
+                          <td className="px-8 py-6 font-bold text-xs text-white/90 uppercase tracking-tight notranslate" translate="no">{event.event}</td>
                           <td className="px-8 py-6 text-center">
                             <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest ${
                               event.impact === 'High' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 
@@ -233,10 +232,10 @@ export default function Home() {
                               {event.impact.toUpperCase()}
                             </span>
                           </td>
-                          <td className="px-8 py-6 text-right font-mono text-xs text-emerald-400 font-bold tabular-nums">
+                          <td className="px-8 py-6 text-right font-mono text-xs text-emerald-400 font-bold tabular-nums notranslate" translate="no">
                             {event.actual || <span className="text-white/10 opacity-50">--</span>}
                           </td>
-                          <td className="px-8 py-6 text-right font-mono text-xs text-white/40 tabular-nums">
+                          <td className="px-8 py-6 text-right font-mono text-xs text-white/40 tabular-nums notranslate" translate="no">
                             {event.forecast || <span className="text-white/10 opacity-50">--</span>}
                           </td>
                         </tr>

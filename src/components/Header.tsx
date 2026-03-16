@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Clock, Zap, ShieldCheck, Radio, Globe } from 'lucide-react';
+import { Clock, Zap, ShieldCheck, Radio } from 'lucide-react';
 
 export function Header() {
   const [time, setTime] = useState<Date | null>(null);
@@ -40,7 +40,6 @@ export function Header() {
     const cookieValue = `/en/${lang}`;
     document.cookie = `googtrans=${cookieValue}; domain=${domain}; path=/`;
     document.cookie = `googtrans=${cookieValue}; path=/`;
-    // Force reload to apply language change and prevent React hydration issues
     window.location.reload();
   };
 
@@ -84,7 +83,7 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-4 lg:gap-10">
-        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10" translate="no">
+        <div className="flex items-center gap-2 bg-white/5 p-1 rounded-xl border border-white/10">
           <button onClick={() => changeLanguage('ro')} className="w-8 h-6 lg:w-9 lg:h-6.5 rounded overflow-hidden border border-white/10 hover:opacity-100 transition-opacity opacity-70">
             <svg viewBox="0 0 3 2" className="w-full h-full"><rect width="1" height="2" fill="#002B7F"/><rect width="1" height="2" x="1" fill="#FCD116"/><rect width="1" height="2" x="2" fill="#CE1126"/></svg>
           </button>
@@ -103,7 +102,7 @@ export function Header() {
             <Clock className="w-3 h-3" />
             Bucharest Time
           </span>
-          <span className="text-base lg:text-xl font-mono font-black text-white tabular-nums tracking-tighter">{bucharestTime}</span>
+          <span className="text-base lg:text-xl font-mono font-black text-white tabular-nums tracking-tighter notranslate" translate="no">{bucharestTime}</span>
         </div>
       </div>
     </header>
