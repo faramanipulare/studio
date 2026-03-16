@@ -23,7 +23,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   const [loadingWeekly, setLoadingWeekly] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
 
-  // Weekly Overview - Once per week/events change
+  // Weekly Overview - Only refresh when weekly data changes
   useEffect(() => {
     async function fetchWeekly() {
       if (!weeklyEvents || weeklyEvents.length === 0) return;
@@ -48,7 +48,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
     fetchWeekly();
   }, [weeklyEvents.length]);
 
-  // Daily Analysis - CRITICAL: Updates on selectedDate change
+  // Daily Analysis - CRITICAL: Must refresh on selectedDate CHANGE
   useEffect(() => {
     let isSubscribed = true;
 
@@ -57,6 +57,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
       
       setLoadingDaily(true);
       try {
+        // We pass the current date and its specific events to Gemini
         const result = await getDailyMarketAnalysis({ 
           date: selectedDate, 
           events: selectedDayEvents.map(e => ({
@@ -79,7 +80,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
 
     fetchDaily();
     return () => { isSubscribed = false; };
-  }, [selectedDate, selectedDayEvents.length]);
+  }, [selectedDate, selectedDayEvents]); // Dependency on events and date ensures refresh
 
   const SentimentIcon = ({ bias }: { bias?: string }) => {
     switch (bias) {
@@ -122,7 +123,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
             <div className="p-4 rounded-xl bg-[#0c0e14] border border-white/5">
               {loadingWeekly ? (
                 <div className="flex items-center justify-center py-4 gap-3 text-white/40">
-                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
                   <span className="text-[10px] uppercase font-black tracking-widest">Synthesizing...</span>
                 </div>
               ) : (
@@ -150,13 +151,13 @@ export const AISidebar: React.FC<AISidebarProps> = ({
           <CardHeader className="pb-3 border-b border-white/5">
             <div className="flex justify-between items-center">
               <CardTitle className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Daily Session IQ</CardTitle>
-              {loadingDaily ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <SentimentIcon bias={dailyAnalysis?.marketBias} />}
+              {loadingDaily ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <SentimentIcon bias={dailyAnalysis?.marketBias} />}
             </div>
           </CardHeader>
           <CardContent className="space-y-5 pt-4">
             {loadingDaily ? (
               <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
                 <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/40">Analyzing Session...</p>
               </div>
             ) : dailyAnalysis ? (
@@ -172,7 +173,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
                   <div className="grid grid-cols-1 gap-2">
                     {dailyAnalysis.keyFactors.map((factor, i) => (
                       <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
-                        <Activity className="w-3.5 h-3.5 text-primary" />
+                        <Activity className="h-3.5 w-3.5 text-primary" />
                         <span className="text-[10px] font-bold text-white/80 leading-snug">{factor}</span>
                       </div>
                     ))}
