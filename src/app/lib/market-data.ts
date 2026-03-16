@@ -2,6 +2,7 @@
 
 /**
  * @fileOverview Institutional market data fetcher - FORCED REAL TIME.
+ * Fetches directly from the source to ensure 'Actual' data is up to date.
  */
 
 export type EconomicEvent = {
@@ -60,9 +61,9 @@ export async function fetchWeeklyEvents(): Promise<Record<string, EconomicEvent[
         currency: item.country || 'USD',
         event: item.title || 'Market Event',
         impact: mapImpact(item.impact),
-        actual: item.actual && item.actual !== "" ? item.actual.toString() : undefined,
-        forecast: item.forecast && item.forecast !== "" ? item.forecast.toString() : undefined,
-        previous: item.previous && item.previous !== "" ? item.previous.toString() : undefined,
+        actual: (item.actual && item.actual !== "") ? String(item.actual) : undefined,
+        forecast: (item.forecast && item.forecast !== "") ? String(item.forecast) : undefined,
+        previous: (item.previous && item.previous !== "") ? String(item.previous) : undefined,
       });
     });
 

@@ -23,7 +23,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   const [loadingWeekly, setLoadingWeekly] = useState(false);
   const [loadingDaily, setLoadingDaily] = useState(false);
 
-  // Weekly Overview - Only sync if weeklyEvents change significantly
+  // Weekly Overview - Once per week/events change
   useEffect(() => {
     async function fetchWeekly() {
       if (!weeklyEvents || weeklyEvents.length === 0) return;
@@ -46,9 +46,9 @@ export const AISidebar: React.FC<AISidebarProps> = ({
       }
     }
     fetchWeekly();
-  }, [weeklyEvents.length > 0]); // Trigger only when data first arrives
+  }, [weeklyEvents.length]);
 
-  // Daily Analysis - CRITICAL: Trigger whenever selectedDate OR events change
+  // Daily Analysis - CRITICAL: Updates on selectedDate change
   useEffect(() => {
     let isSubscribed = true;
 
@@ -79,7 +79,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
 
     fetchDaily();
     return () => { isSubscribed = false; };
-  }, [selectedDate, selectedDayEvents.length]); // Re-run when date or event count changes
+  }, [selectedDate, selectedDayEvents.length]);
 
   const SentimentIcon = ({ bias }: { bias?: string }) => {
     switch (bias) {
@@ -91,7 +91,7 @@ export const AISidebar: React.FC<AISidebarProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#1F1C21] overflow-hidden">
+    <div className="flex flex-col h-full bg-[#1F1C21] overflow-hidden notranslate" translate="no">
       <div className="p-4 border-b border-white/5 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-primary/10 rounded-lg border border-primary/20">

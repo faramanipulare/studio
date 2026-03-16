@@ -48,8 +48,9 @@ export default function Home() {
         }
       }
     } catch (err: any) {
+      console.error("SYNC_ERROR:", err);
       if (Object.keys(weeklyData).length === 0) {
-        setError("Market synchronization failed. Check network.");
+        setError("Institutional feed temporarily synchronized. Check connection.");
       }
     } finally {
       setLoading(false);
@@ -73,7 +74,7 @@ export default function Home() {
 
   const filteredEvents = useMemo(() => {
     let events = selectedDayEvents;
-    if (impactFilter !== 'All') {
+    if (impactFilter === 'High') {
       events = selectedDayEvents.filter(e => e.impact === 'High');
     }
     return events;
@@ -85,7 +86,7 @@ export default function Home() {
     <div className="flex flex-col h-screen bg-[#1F1C21] text-foreground overflow-hidden w-full" suppressHydrationWarning>
       <Header />
       
-      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative w-full" translate="no">
+      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative w-full">
         
         {/* Mobile AI Analysis Trigger */}
         <div className="lg:hidden p-3 bg-[#161419] border-b border-white/5 flex items-center justify-between shrink-0">
@@ -100,25 +101,29 @@ export default function Home() {
               </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="h-[85vh] bg-[#1F1C21] border-white/5 p-0 rounded-t-3xl overflow-hidden">
-              <AISidebar 
-                selectedDayEvents={selectedDayEvents} 
-                selectedDate={selectedDate} 
-                weeklyEvents={allWeeklyEvents}
-              />
+              <div className="h-full notranslate" translate="no">
+                <AISidebar 
+                  selectedDayEvents={selectedDayEvents} 
+                  selectedDate={selectedDate} 
+                  weeklyEvents={allWeeklyEvents}
+                />
+              </div>
             </SheetContent>
           </Sheet>
         </div>
 
-        {/* Sidebar Container - FIXED WIDTH ON DESKTOP */}
+        {/* Sidebar Container */}
         <div className="hidden lg:block border-r border-white/5 shrink-0 h-full w-[400px] overflow-hidden bg-[#1F1C21]">
-          <AISidebar 
-            selectedDayEvents={selectedDayEvents} 
-            selectedDate={selectedDate} 
-            weeklyEvents={allWeeklyEvents}
-          />
+          <div className="h-full notranslate" translate="no">
+            <AISidebar 
+              selectedDayEvents={selectedDayEvents} 
+              selectedDate={selectedDate} 
+              weeklyEvents={allWeeklyEvents}
+            />
+          </div>
         </div>
 
-        {/* Main Feed - FLEX-1 TO TAKE ALL REMAINING SPACE */}
+        {/* Main Feed - 100% WIDTH OPTIMIZED */}
         <div className="flex-1 flex flex-col bg-[#161419] overflow-hidden w-full">
           <div className="p-4 lg:p-8 pb-2 shrink-0 w-full">
             <div className="flex flex-col xl:flex-row xl:items-end justify-between border-b border-white/5 pb-6 gap-6 w-full">
@@ -165,7 +170,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex gap-2 mt-6 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-2 mt-6 overflow-x-auto pb-2 scrollbar-hide w-full">
               {Object.keys(weeklyData).sort().map((dateStr) => {
                 const date = parseISO(dateStr);
                 const isSelected = selectedDate === dateStr;
@@ -173,7 +178,7 @@ export default function Home() {
                   <button
                     key={dateStr}
                     onClick={() => setSelectedDate(dateStr)}
-                    className={`flex-1 min-w-[120px] p-4 rounded-2xl border transition-all text-left ${
+                    className={`flex-1 min-w-[140px] p-4 rounded-2xl border transition-all text-left ${
                       isSelected ? 'bg-primary/10 border-primary shadow-[0_0_20px_rgba(59,130,246,0.1)]' : 'bg-[#0c0e14] border-white/5 hover:border-white/20'
                     }`}
                   >
@@ -192,7 +197,7 @@ export default function Home() {
           <div className="flex-1 overflow-y-auto p-4 lg:p-8 pt-2 pb-32 w-full">
             <div className="bg-[#0c0e14] border border-white/5 rounded-3xl overflow-hidden shadow-2xl w-full">
               {loading && Object.keys(weeklyData).length === 0 ? (
-                <div className="py-60 flex flex-col items-center justify-center gap-6">
+                <div className="py-40 flex flex-col items-center justify-center gap-6">
                   <div className="relative">
                     <Loader2 className="w-16 h-16 text-primary animate-spin" />
                     <div className="absolute inset-0 bg-primary/20 blur-xl animate-pulse rounded-full"></div>
@@ -200,12 +205,12 @@ export default function Home() {
                   <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Establishing Secure Feed...</p>
                 </div>
               ) : error ? (
-                <div className="py-60 text-center text-rose-500 flex flex-col items-center gap-6">
+                <div className="py-40 text-center text-rose-500 flex flex-col items-center gap-6">
                   <AlertCircle className="w-16 h-16 opacity-40 animate-pulse" />
                   <p className="text-sm font-black uppercase tracking-[0.2em]">{error}</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto w-full">
+                <div className="overflow-x-auto w-full notranslate" translate="no">
                   <table className="w-full text-left border-collapse min-w-[1000px]">
                     <thead>
                       <tr className="border-b border-white/5 bg-white/[0.02]">
@@ -217,12 +222,12 @@ export default function Home() {
                         <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white/30 text-right">FORECAST</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/[0.03]">
+                    <tbody className="divide-y divide-white/[0.03] notranslate" translate="no">
                       {filteredEvents.map((event) => (
-                        <tr key={event.id} className="hover:bg-white/[0.04] transition-all group">
-                          <td className="px-8 py-6 font-mono text-xs text-white/80 tabular-nums notranslate" translate="no">{event.time}</td>
-                          <td className="px-8 py-6 font-black text-xs text-white uppercase tracking-tighter notranslate" translate="no">{event.currency}</td>
-                          <td className="px-8 py-6 font-bold text-xs text-white/90 uppercase tracking-tight notranslate" translate="no">{event.event}</td>
+                        <tr key={event.id} className="hover:bg-white/[0.04] transition-all group notranslate">
+                          <td className="px-8 py-6 font-mono text-xs text-white/80 tabular-nums">{event.time}</td>
+                          <td className="px-8 py-6 font-black text-xs text-white uppercase tracking-tighter">{event.currency}</td>
+                          <td className="px-8 py-6 font-bold text-xs text-white/90 uppercase tracking-tight">{event.event}</td>
                           <td className="px-8 py-6 text-center">
                             <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest ${
                               event.impact === 'High' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 
@@ -232,10 +237,10 @@ export default function Home() {
                               {event.impact.toUpperCase()}
                             </span>
                           </td>
-                          <td className="px-8 py-6 text-right font-mono text-xs text-emerald-400 font-bold tabular-nums notranslate" translate="no">
+                          <td className="px-8 py-6 text-right font-mono text-xs text-emerald-400 font-bold tabular-nums">
                             {event.actual || <span className="text-white/10 opacity-50">--</span>}
                           </td>
-                          <td className="px-8 py-6 text-right font-mono text-xs text-white/40 tabular-nums notranslate" translate="no">
+                          <td className="px-8 py-6 text-right font-mono text-xs text-white/40 tabular-nums">
                             {event.forecast || <span className="text-white/10 opacity-50">--</span>}
                           </td>
                         </tr>
